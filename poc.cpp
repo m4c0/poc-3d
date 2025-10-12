@@ -5,11 +5,13 @@
 import casein;
 import dotz;
 import hai;
+import traits;
 import vinyl;
 import voo;
 
+static constexpr const auto max_vtx = 6;
 struct vtx {
-  dotz::vec3 p;
+  dotz::vec3 pos;
 };
 
 struct app_stuff {
@@ -27,10 +29,13 @@ struct app_stuff {
       vee::vertex_input_bind(sizeof(vtx)),
     },
     .attributes {
-      vee::vertex_attribute_vec3(0, 0),
+      vee::vertex_attribute_vec3(0, traits::offset_of(&vtx::pos)),
     },
   });
-
+  voo::bound_buffer vb = voo::bound_buffer::create_from_host(
+      dq.physical_device(),
+      sizeof(vtx) * max_vtx,
+      vee::buffer_usage::vertex_buffer);
 };
 static hai::uptr<app_stuff> gas {};
 
@@ -39,22 +44,33 @@ struct sized_stuff {
 };
 static hai::uptr<sized_stuff> gss {};
 
+static void init() {
+  gas.reset(new app_stuff {});
+
+  voo::memiter<vtx> m { *gas->vb.memory };
+  m += { .pos { 0, 0, 0 } };
+  m += { .pos { 1, 1, 0 } };
+  m += { .pos { 1, 0, 0 } };
+  m += { .pos { 0, 0, 0 } };
+  m += { .pos { 0, 1, 0 } };
+  m += { .pos { 1, 1, 0 } };
+}
+
 static void frame() {
   if (!gss) gss.reset(new sized_stuff {});
 
   gss->sw.acquire_next_image();
   gss->sw.queue_one_time_submit(gas->dq.queue(), [&] {
-    gss->sw.cmd_render_pass({
+    auto cb = gss->sw.command_buffer();
+    auto rp = gss->sw.cmd_render_pass({
       .command_buffer = gss->sw.command_buffer(),
       .clear_colours { vee::clear_colour(0.1, 0.2, 0.3, 1.0) },
     });
-
-    auto cb = gss->sw.command_buffer();
     vee::cmd_set_viewport(cb, gss->sw.extent());
     vee::cmd_set_scissor(cb, gss->sw.extent());
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
-    // vee::cmd_bind_vertex_buffers(cb, 1, u.data().local_buffer());
-    // vee::cmd_draw(cb, quad::v_count, inst, first_inst);
+    vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
+    vee::cmd_draw(cb, max_vtx);
   });
   gss->sw.queue_present(gas->dq.queue());
 }
@@ -62,7 +78,7 @@ static void frame() {
 struct app_init {
   app_init() {
     using namespace vinyl;
-    on(START,  [] { gas.reset(new app_stuff {}); });
+    on(START,  &init);
     on(RESIZE, [] { gss.reset(nullptr); });
     on(FRAME,  &frame);
     on(STOP,   [] { 
