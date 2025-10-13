@@ -12,6 +12,7 @@ import voo;
 static constexpr const auto max_vtx = 6;
 struct vtx {
   dotz::vec3 pos;
+  dotz::vec2 uv;
 };
 
 struct app_stuff {
@@ -30,6 +31,7 @@ struct app_stuff {
     },
     .attributes {
       vee::vertex_attribute_vec3(0, traits::offset_of(&vtx::pos)),
+      vee::vertex_attribute_vec2(0, traits::offset_of(&vtx::uv)),
     },
   });
   voo::bound_buffer vb = voo::bound_buffer::create_from_host(
@@ -48,12 +50,12 @@ static void init() {
   gas.reset(new app_stuff {});
 
   voo::memiter<vtx> m { *gas->vb.memory };
-  m += { .pos { 0, 0, 0 } };
-  m += { .pos { 1, 1, 0 } };
-  m += { .pos { 1, 0, 0 } };
-  m += { .pos { 0, 0, 0 } };
-  m += { .pos { 0, 1, 0 } };
-  m += { .pos { 1, 1, 0 } };
+  m += { .pos { 0, 0, 0 }, .uv { 0, 0 } };
+  m += { .pos { 1, 1, 0 }, .uv { 1, 1 } };
+  m += { .pos { 1, 0, 0 }, .uv { 1, 0 } };
+  m += { .pos { 0, 0, 0 }, .uv { 0, 0 } };
+  m += { .pos { 0, 1, 0 }, .uv { 0, 1 } };
+  m += { .pos { 1, 1, 0 }, .uv { 1, 1 } };
 }
 
 static void frame() {
