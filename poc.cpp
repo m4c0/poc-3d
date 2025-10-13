@@ -17,11 +17,27 @@ struct vtx {
 
 struct app_stuff {
   voo::device_and_queue dq { "poc-3d", casein::native_ptr };
-  vee::render_pass rp = voo::single_att_render_pass(dq);
+  vee::render_pass rp = vee::create_render_pass({
+    .attachments {{
+      vee::create_colour_attachment(dq.physical_device(), dq.surface()),
+      vee::create_depth_attachment(),
+    }},
+    .subpasses {{
+      vee::create_subpass({
+        .colours {{ vee::create_attachment_ref(0, vee::image_layout_color_attachment_optimal) }},
+        .depth_stencil { vee::create_attachment_ref(1, vee::image_layout_depth_stencil_attachment_optimal) },
+      }),
+    }},
+    .dependencies {{
+      vee::create_colour_dependency(),
+      vee::create_depth_dependency(),
+    }},
+  });
   vee::pipeline_layout pl = vee::create_pipeline_layout();
   vee::gr_pipeline gp = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
+    .depth = vee::depth::op_less(),
     .shaders {
       voo::shader("poc.vert.spv").pipeline_vert_stage(),
       voo::shader("poc.frag.spv").pipeline_frag_stage(),
@@ -42,7 +58,8 @@ struct app_stuff {
 static hai::uptr<app_stuff> gas {};
 
 struct sized_stuff {
-  voo::swapchain_and_stuff sw { gas->dq, *gas->rp };
+  voo::offscreen::depth_buffer depth { gas->dq.physical_device(), gas->dq.extent_of() };
+  voo::swapchain_and_stuff sw { gas->dq, *gas->rp, depth.image_view() };
 };
 static hai::uptr<sized_stuff> gss {};
 
@@ -50,26 +67,26 @@ static void init() {
   gas.reset(new app_stuff {});
 
   voo::memiter<vtx> m { *gas->vb.memory };
-  m += { .pos { 0.0f, 0.0f, 0.5f }, .uv { 0, 0 } };
-  m += { .pos { 1.0f, 1.0f, 0.5f }, .uv { 1, 1 } };
-  m += { .pos { 1.0f, 0.0f, 0.5f }, .uv { 1, 0 } };
-  m += { .pos { 0.0f, 0.0f, 0.5f }, .uv { 0, 0 } };
-  m += { .pos { 0.0f, 1.0f, 0.5f }, .uv { 0, 1 } };
-  m += { .pos { 1.0f, 1.0f, 0.5f }, .uv { 1, 1 } };
+  m += { .pos { 0.0f, 0.0f, 0.0f }, .uv { 0, 0 } };
+  m += { .pos { 1.0f, 1.0f, 0.0f }, .uv { 1, 1 } };
+  m += { .pos { 1.0f, 0.0f, 0.0f }, .uv { 1, 0 } };
+  m += { .pos { 0.0f, 0.0f, 0.0f }, .uv { 0, 0 } };
+  m += { .pos { 0.0f, 1.0f, 0.0f }, .uv { 0, 1 } };
+  m += { .pos { 1.0f, 1.0f, 0.0f }, .uv { 1, 1 } };
 
-  m += { .pos { -0.5f, -0.5f, 0.0f }, .uv { 0, 0 } };
-  m += { .pos {  0.5f,  0.5f, 0.0f }, .uv { 1, 1 } };
-  m += { .pos {  0.5f, -0.5f, 0.0f }, .uv { 1, 0 } };
-  m += { .pos { -0.5f, -0.5f, 0.0f }, .uv { 0, 0 } };
-  m += { .pos { -0.5f,  0.5f, 0.0f }, .uv { 0, 1 } };
-  m += { .pos {  0.5f,  0.5f, 0.0f }, .uv { 1, 1 } };
+  m += { .pos { -0.5f, -0.5f, 0.3f }, .uv { 0, 0 } };
+  m += { .pos {  0.5f,  0.5f, 0.3f }, .uv { 1, 1 } };
+  m += { .pos {  0.5f, -0.5f, 0.3f }, .uv { 1, 0 } };
+  m += { .pos { -0.5f, -0.5f, 0.3f }, .uv { 0, 0 } };
+  m += { .pos { -0.5f,  0.5f, 0.3f }, .uv { 0, 1 } };
+  m += { .pos {  0.5f,  0.5f, 0.3f }, .uv { 1, 1 } };
 
-  m += { .pos { -1.0f, -1.0f, -0.5f }, .uv { 0, 0 } };
-  m += { .pos {  0.0f,  0.0f, -0.5f }, .uv { 1, 1 } };
-  m += { .pos {  0.0f, -1.0f, -0.5f }, .uv { 1, 0 } };
-  m += { .pos { -1.0f, -1.0f, -0.5f }, .uv { 0, 0 } };
-  m += { .pos { -1.0f,  0.0f, -0.5f }, .uv { 0, 1 } };
-  m += { .pos {  0.0f,  0.0f, -0.5f }, .uv { 1, 1 } };
+  m += { .pos { -1.0f, -1.0f, 0.5f }, .uv { 0, 0 } };
+  m += { .pos {  0.0f,  0.0f, 0.5f }, .uv { 1, 1 } };
+  m += { .pos {  0.0f, -1.0f, 0.5f }, .uv { 1, 0 } };
+  m += { .pos { -1.0f, -1.0f, 0.5f }, .uv { 0, 0 } };
+  m += { .pos { -1.0f,  0.0f, 0.5f }, .uv { 0, 1 } };
+  m += { .pos {  0.0f,  0.0f, 0.5f }, .uv { 1, 1 } };
 }
 
 static void frame() {
@@ -80,7 +97,10 @@ static void frame() {
     auto cb = gss->sw.command_buffer();
     auto rp = gss->sw.cmd_render_pass({
       .command_buffer = gss->sw.command_buffer(),
-      .clear_colours { vee::clear_colour(0.1, 0.2, 0.3, 1.0) },
+      .clear_colours {
+        vee::clear_colour(0.1, 0.2, 0.3, 1.0),
+        vee::clear_depth(1),
+      },
     });
     vee::cmd_set_viewport(cb, gss->sw.extent());
     vee::cmd_set_scissor(cb, gss->sw.extent());
