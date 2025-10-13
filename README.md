@@ -11,3 +11,5 @@ This is a "brain-dump" because Internet search is engagement-oriented nowadays.
 * Z test are ignored when no depth buffer is present. Silently ignored on
   MoltenVK.
 * Basic quad is X-right, Y-down, Z-outward (when depth-op is "less").
+* We can go from right-hand down-Y to right-hand up-Y with a flipped viewport,
+  depth with op-greater and clockwise front-face
