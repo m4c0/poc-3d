@@ -37,8 +37,7 @@ struct app_stuff {
   vee::gr_pipeline gp = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
-    .front_face_cw = true,
-    .depth = vee::depth::op_greater(),
+    .depth = vee::depth::op_less(),
     .shaders {
       voo::shader("poc.vert.spv").pipeline_vert_stage(),
       voo::shader("poc.frag.spv").pipeline_frag_stage(),
@@ -68,26 +67,27 @@ static void init() {
   gas.reset(new app_stuff {});
 
   voo::memiter<vtx> m { *gas->vb.memory };
-  m += { .pos { 0.0f, 0.0f, 0.1f }, .uv { 0, 0 } };
-  m += { .pos { 0.5f, 0.5f, 0.1f }, .uv { 1, 1 } };
-  m += { .pos { 0.5f, 0.0f, 0.1f }, .uv { 1, 0 } };
-  m += { .pos { 0.0f, 0.0f, 0.1f }, .uv { 0, 0 } };
-  m += { .pos { 0.0f, 0.5f, 0.1f }, .uv { 0, 1 } };
-  m += { .pos { 0.5f, 0.5f, 0.1f }, .uv { 1, 1 } };
+  // Currently in "camera coordinates"
+  m += { .pos { 0.5f, 0.5f, -0.5f }, .uv { 1, 1 } };
+  m += { .pos { 0.0f, 0.0f, -0.5f }, .uv { 0, 0 } };
+  m += { .pos { 0.5f, 0.0f, -0.5f }, .uv { 1, 0 } };
+  m += { .pos { 0.0f, 0.5f, -0.5f }, .uv { 0, 1 } };
+  m += { .pos { 0.0f, 0.0f, -0.5f }, .uv { 0, 0 } };
+  m += { .pos { 0.5f, 0.5f, -0.5f }, .uv { 1, 1 } };
 
-  m += { .pos { -0.25f, -0.25f, 0.3f }, .uv { 0, 0 } };
-  m += { .pos {  0.25f,  0.25f, 0.3f }, .uv { 1, 1 } };
-  m += { .pos {  0.25f, -0.25f, 0.3f }, .uv { 1, 0 } };
-  m += { .pos { -0.25f, -0.25f, 0.3f }, .uv { 0, 0 } };
-  m += { .pos { -0.25f,  0.25f, 0.3f }, .uv { 0, 1 } };
-  m += { .pos {  0.25f,  0.25f, 0.3f }, .uv { 1, 1 } };
+  m += { .pos {  0.25f,  0.25f, -0.3f }, .uv { 1, 1 } };
+  m += { .pos { -0.25f, -0.25f, -0.3f }, .uv { 0, 0 } };
+  m += { .pos {  0.25f, -0.25f, -0.3f }, .uv { 1, 0 } };
+  m += { .pos { -0.25f,  0.25f, -0.3f }, .uv { 0, 1 } };
+  m += { .pos { -0.25f, -0.25f, -0.3f }, .uv { 0, 0 } };
+  m += { .pos {  0.25f,  0.25f, -0.3f }, .uv { 1, 1 } };
 
-  m += { .pos { -0.5f, -0.5f, 0.5f }, .uv { 0, 0 } };
-  m += { .pos {  0.0f,  0.0f, 0.5f }, .uv { 1, 1 } };
-  m += { .pos {  0.0f, -0.5f, 0.5f }, .uv { 1, 0 } };
-  m += { .pos { -0.5f, -0.5f, 0.5f }, .uv { 0, 0 } };
-  m += { .pos { -0.5f,  0.0f, 0.5f }, .uv { 0, 1 } };
-  m += { .pos {  0.0f,  0.0f, 0.5f }, .uv { 1, 1 } };
+  m += { .pos {  0.0f,  0.0f, -0.1f }, .uv { 1, 1 } };
+  m += { .pos { -0.5f, -0.5f, -0.1f }, .uv { 0, 0 } };
+  m += { .pos {  0.0f, -0.5f, -0.1f }, .uv { 1, 0 } };
+  m += { .pos { -0.5f,  0.0f, -0.1f }, .uv { 0, 1 } };
+  m += { .pos { -0.5f, -0.5f, -0.1f }, .uv { 0, 0 } };
+  m += { .pos {  0.0f,  0.0f, -0.1f }, .uv { 1, 1 } };
 }
 
 static void frame() {
@@ -100,10 +100,10 @@ static void frame() {
       .command_buffer = gss->sw.command_buffer(),
       .clear_colours {
         vee::clear_colour(0.1, 0.2, 0.3, 1.0),
-        vee::clear_depth(0),
+        vee::clear_depth(1),
       },
     });
-    vee::cmd_set_viewport_flipped(cb, gss->sw.extent());
+    vee::cmd_set_viewport(cb, gss->sw.extent());
     vee::cmd_set_scissor(cb, gss->sw.extent());
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
