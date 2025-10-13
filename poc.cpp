@@ -9,7 +9,7 @@ import traits;
 import vinyl;
 import voo;
 
-static constexpr const auto max_vtx = 6;
+static constexpr const auto max_vtx = 18;
 struct vtx {
   dotz::vec3 pos;
   dotz::vec2 uv;
@@ -56,6 +56,20 @@ static void init() {
   m += { .pos { 0, 0, 0 }, .uv { 0, 0 } };
   m += { .pos { 0, 1, 0 }, .uv { 0, 1 } };
   m += { .pos { 1, 1, 0 }, .uv { 1, 1 } };
+
+  m += { .pos { -0.5f, -0.5f, 0.0f }, .uv { 0, 0 } };
+  m += { .pos {  0.5f,  0.5f, 0.0f }, .uv { 1, 1 } };
+  m += { .pos {  0.5f, -0.5f, 0.0f }, .uv { 1, 0 } };
+  m += { .pos { -0.5f, -0.5f, 0.0f }, .uv { 0, 0 } };
+  m += { .pos { -0.5f,  0.5f, 0.0f }, .uv { 0, 1 } };
+  m += { .pos {  0.5f,  0.5f, 0.0f }, .uv { 1, 1 } };
+
+  m += { .pos { -1, -1, 0 }, .uv { 0, 0 } };
+  m += { .pos {  0,  0, 0 }, .uv { 1, 1 } };
+  m += { .pos {  0, -1, 0 }, .uv { 1, 0 } };
+  m += { .pos { -1, -1, 0 }, .uv { 0, 0 } };
+  m += { .pos { -1,  0, 0 }, .uv { 0, 1 } };
+  m += { .pos {  0,  0, 0 }, .uv { 1, 1 } };
 }
 
 static void frame() {
