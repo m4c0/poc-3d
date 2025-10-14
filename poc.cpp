@@ -16,10 +16,13 @@ struct vtx {
   dotz::vec2 uv;
 };
 struct upc {
-  dotz::vec3 cam_pos { 0, 0, 3 };
-  float pad1;
-  dotz::vec3 cam_rot { 0, 0, 0 };
-  float pad2;
+  float aspect = 720.0 / 1280.0; 
+  float fov = dotz::radians(80);
+  float far = 10.0;
+  float near = 0.01;
+
+  dotz::vec4 cam_pos { 0, 0, 3, 0 };
+  dotz::vec4 cam_rot { 0, 0, 0, 0 };
   float time;
 };
 
