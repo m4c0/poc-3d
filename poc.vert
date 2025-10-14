@@ -12,11 +12,11 @@ layout(location = 0) out vec2 f_uv;
 void main() {
   float aspect = 720.0 / 1280.0; 
   float fov = radians(80);
-  float far = 1.00;
+  float far = 10.0;
   float near = 0.01;
 
-  vec3 cam_pos = vec3(0, 0, 0);
-  vec3 cam_rot = vec3(10, 20, time);
+  vec3 cam_pos = vec3(0, 0, 3);
+  vec3 cam_rot = vec3(0, 0, 0);
 
   mat4 proj = mat4(
     aspect / tan(fov / 2), 0, 0, 0,
@@ -39,6 +39,11 @@ void main() {
     sin(cam_rot.z), cos(cam_rot.z), 0, 0,
     0, 0, 1, 0,
     0, 0, 0, 1
+  ) * mat4(
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    -cam_pos.x, cam_pos.yz, 1
   );
 
   gl_Position = proj * cam * vec4(pos.x, -pos.yz, 1);
