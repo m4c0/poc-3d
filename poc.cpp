@@ -130,15 +130,15 @@ static void frame() {
   gss->sw.queue_present(gas->dq.queue());
 }
 
-struct app_init {
-  app_init() {
-    using namespace vinyl;
-    on(START,  &init);
-    on(RESIZE, [] { gss.reset(nullptr); });
-    on(FRAME,  &frame);
-    on(STOP,   [] { 
-      gss.reset(nullptr);
-      gas.reset(nullptr);
-    });
-  }
-} i;
+const auto i = [] {
+  using namespace vinyl;
+  on(START,  &init);
+  on(RESIZE, [] { gss.reset(nullptr); });
+  on(FRAME,  &frame);
+  on(STOP,   [] { 
+    gss.reset(nullptr);
+    gas.reset(nullptr);
+  });
+
+  return 0;
+}();
