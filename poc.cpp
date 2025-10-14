@@ -24,7 +24,7 @@ struct upc {
   dotz::vec4 cam_pos { 0, 0, 3, 0 };
   dotz::vec4 cam_rot { 0, 0, 0, 0 };
   float time;
-};
+} g_pc;
 
 struct app_stuff {
   voo::device_and_queue dq { "poc-3d", casein::native_ptr };
@@ -99,6 +99,9 @@ static void init() {
   m += { .pos { -0.5f,  0.0f, -0.1f }, .uv { 0, 1 } };
   m += { .pos { -0.5f, -0.5f, -0.1f }, .uv { 0, 0 } };
   m += { .pos {  0.0f,  0.0f, -0.1f }, .uv { 1, 1 } };
+
+  casein::cursor_visible = false;
+  casein::interrupt(casein::IRQ_CURSOR);
 }
 
 static void frame() {
@@ -107,11 +110,9 @@ static void frame() {
   gss->sw.acquire_next_image();
   gss->sw.queue_one_time_submit(gas->dq.queue(), [&] {
     static sitime::stopwatch time {};
+    g_pc.aspect = gss->sw.aspect();
+    g_pc.time = time.millis() / 1000.0f;
 
-    upc pc {
-      .aspect = gss->sw.aspect(),
-      .time = time.millis() / 1000.0f,
-    };
     auto cb = gss->sw.command_buffer();
     auto rp = gss->sw.cmd_render_pass({
       .command_buffer = gss->sw.command_buffer(),
@@ -124,7 +125,7 @@ static void frame() {
     vee::cmd_set_scissor(cb, gss->sw.extent());
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
-    vee::cmd_push_vertex_constants(cb, *gas->pl, &pc);
+    vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
     vee::cmd_draw(cb, max_vtx);
   });
   gss->sw.queue_present(gas->dq.queue());
@@ -138,6 +139,17 @@ const auto i = [] {
   on(STOP,   [] { 
     gss.reset(nullptr);
     gas.reset(nullptr);
+  });
+
+  using namespace casein;
+  handle(MOUSE_MOVE, [] {
+    mouse_pos = window_size / 2.0;
+    interrupt(IRQ_MOUSE_POS);
+  });
+  handle(MOUSE_MOVE_REL, [] {
+    g_pc.cam_rot.x -= mouse_rel.y * 0.01;
+    g_pc.cam_rot.x = dotz::clamp(g_pc.cam_rot.x, -0.5f, 0.5f);
+    g_pc.cam_rot.y -= mouse_rel.x * 0.01;
   });
 
   return 0;
