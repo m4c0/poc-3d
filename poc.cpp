@@ -5,6 +5,7 @@
 import casein;
 import dotz;
 import hai;
+import sitime;
 import traits;
 import vinyl;
 import voo;
@@ -13,6 +14,9 @@ static constexpr const auto max_vtx = 18;
 struct vtx {
   dotz::vec3 pos;
   dotz::vec2 uv;
+};
+struct upc {
+  float time;
 };
 
 struct app_stuff {
@@ -33,7 +37,7 @@ struct app_stuff {
       vee::create_depth_dependency(),
     }},
   });
-  vee::pipeline_layout pl = vee::create_pipeline_layout();
+  vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vertex_push_constant_range<upc>());
   vee::gr_pipeline gp = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
@@ -95,6 +99,11 @@ static void frame() {
 
   gss->sw.acquire_next_image();
   gss->sw.queue_one_time_submit(gas->dq.queue(), [&] {
+    static sitime::stopwatch time {};
+
+    upc pc {
+      .time = time.millis() / 1000.0f,
+    };
     auto cb = gss->sw.command_buffer();
     auto rp = gss->sw.cmd_render_pass({
       .command_buffer = gss->sw.command_buffer(),
@@ -107,6 +116,7 @@ static void frame() {
     vee::cmd_set_scissor(cb, gss->sw.extent());
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
+    vee::cmd_push_vertex_constants(cb, *gas->pl, &pc);
     vee::cmd_draw(cb, max_vtx);
   });
   gss->sw.queue_present(gas->dq.queue());

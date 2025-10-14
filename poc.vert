@@ -1,5 +1,9 @@
 #version 450
 
+layout(push_constant) uniform upc {
+  float time;
+};
+
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec2 uv;
 
@@ -7,12 +11,12 @@ layout(location = 0) out vec2 f_uv;
 
 void main() {
   float aspect = 720.0 / 1280.0; 
-  float fov = radians(120);
+  float fov = radians(80);
   float far = 1.00;
   float near = 0.01;
 
   vec3 cam_pos = vec3(0, 0, 0);
-  vec3 cam_rot = vec3(radians(30), 0, 0);
+  vec3 cam_rot = vec3(time * 3.14, 0, 0);
 
   mat4 proj = mat4(
     aspect / tan(fov / 2), 0, 0, 0,
