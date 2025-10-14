@@ -16,7 +16,7 @@ void main() {
   float near = 0.01;
 
   vec3 cam_pos = vec3(0, 0, 0);
-  vec3 cam_rot = vec3(0, 0, 0);
+  vec3 cam_rot = vec3(10, 20, time);
 
   mat4 proj = mat4(
     aspect / tan(fov / 2), 0, 0, 0,
@@ -33,6 +33,11 @@ void main() {
     cos(cam_rot.y), 0, -sin(cam_rot.y), 0,
     0, 1, 0, 0,
     sin(cam_rot.y), 0, cos(cam_rot.y), 0,
+    0, 0, 0, 1
+  ) * mat4(
+    cos(cam_rot.z), -sin(cam_rot.z), 0, 0,
+    sin(cam_rot.z), cos(cam_rot.z), 0, 0,
+    0, 0, 1, 0,
     0, 0, 0, 1
   );
 
