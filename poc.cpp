@@ -16,7 +16,7 @@ struct vtx {
   dotz::vec2 uv;
 };
 struct upc {
-  float aspect = 720.0 / 1280.0; 
+  float aspect;
   float fov = dotz::radians(80);
   float far = 10.0;
   float near = 0.01;
@@ -109,6 +109,7 @@ static void frame() {
     static sitime::stopwatch time {};
 
     upc pc {
+      .aspect = gss->sw.aspect(),
       .time = time.millis() / 1000.0f,
     };
     auto cb = gss->sw.command_buffer();
