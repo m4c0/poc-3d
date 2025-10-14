@@ -16,6 +16,10 @@ struct vtx {
   dotz::vec2 uv;
 };
 struct upc {
+  dotz::vec3 cam_pos { 0, 0, 3 };
+  float pad1;
+  dotz::vec3 cam_rot { 0, 0, 0 };
+  float pad2;
   float time;
 };
 
