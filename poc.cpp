@@ -26,6 +26,11 @@ struct upc {
   float time;
 } g_pc;
 
+static bool g_key_w = false;
+static bool g_key_s = false;
+static bool g_key_a = false;
+static bool g_key_d = false;
+
 struct app_stuff {
   voo::device_and_queue dq { "poc-3d", casein::native_ptr };
   vee::render_pass rp = vee::create_render_pass({
@@ -106,6 +111,20 @@ static void init() {
 
 static void frame() {
   if (!gss) gss.reset(new sized_stuff {});
+  
+  static sitime::stopwatch ftime {};
+  dotz::vec2 cam_delta {
+    ((g_key_a ? -1 : 0) + (g_key_d ? 1 : 0)),
+    ((g_key_w ? -1 : 0) + (g_key_s ? 1 : 0))
+  };
+  if (dotz::sq_length(cam_delta) > 0) {
+    float c = dotz::cos(g_pc.cam_rot.y);
+    float s = dotz::sin(g_pc.cam_rot.y);
+    auto d = dotz::normalise(cam_delta) * ftime.millis() / 1000.0f;
+    g_pc.cam_pos.x += c * d.x + s * d.y;
+    g_pc.cam_pos.z += -s * d.x + c * d.y;
+  }
+  ftime = {};
 
   gss->sw.acquire_next_image();
   gss->sw.queue_one_time_submit(gas->dq.queue(), [&] {
@@ -151,6 +170,15 @@ const auto i = [] {
     g_pc.cam_rot.x = dotz::clamp(g_pc.cam_rot.x, -0.5f, 0.5f);
     g_pc.cam_rot.y -= mouse_rel.x * 0.01;
   });
+
+  handle(KEY_DOWN, K_W, [] { g_key_w = true;  });
+  handle(KEY_UP,   K_W, [] { g_key_w = false; });
+  handle(KEY_DOWN, K_S, [] { g_key_s = true;  });
+  handle(KEY_UP,   K_S, [] { g_key_s = false; });
+  handle(KEY_DOWN, K_A, [] { g_key_a = true;  });
+  handle(KEY_UP,   K_A, [] { g_key_a = false; });
+  handle(KEY_DOWN, K_D, [] { g_key_d = true;  });
+  handle(KEY_UP,   K_D, [] { g_key_d = false; });
 
   return 0;
 }();
