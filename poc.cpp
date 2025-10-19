@@ -4,17 +4,16 @@
 
 import casein;
 import dotz;
+import glub;
 import hai;
+import jojo;
 import sitime;
 import traits;
 import vinyl;
 import voo;
 
-static constexpr const auto max_vtx = 18;
-struct vtx {
-  dotz::vec3 pos;
-  dotz::vec2 uv;
-};
+import print;
+
 struct upc {
   float aspect;
   float fov = dotz::radians(80);
@@ -59,21 +58,15 @@ struct app_stuff {
       voo::shader("poc.frag.spv").pipeline_frag_stage(),
     },
     .bindings {
-      vee::vertex_input_bind(sizeof(vtx)),
+      vee::vertex_input_bind(sizeof(dotz::vec3)),
     },
     .attributes {
-      vee::vertex_attribute_vec3(0, traits::offset_of(&vtx::pos)),
-      vee::vertex_attribute_vec2(0, traits::offset_of(&vtx::uv)),
+      vee::vertex_attribute_vec3(0, 0),
     },
   });
-  voo::bound_buffer vb = voo::bound_buffer::create_from_host(
-      dq.physical_device(),
-      sizeof(vtx) * max_vtx,
-      vee::buffer_usage::vertex_buffer);
-  voo::bound_buffer ib = voo::bound_buffer::create_from_host(
-      dq.physical_device(),
-      sizeof(short) * max_vtx,
-      vee::buffer_usage::index_buffer);
+  voo::bound_buffer vb;
+  voo::bound_buffer ib;
+  hai::varray<vee::draw_indexed_params> xparams {};
 };
 static hai::uptr<app_stuff> gas {};
 
@@ -86,47 +79,37 @@ static hai::uptr<sized_stuff> gss {};
 static void init() {
   gas.reset(new app_stuff {});
 
-  voo::memiter<unsigned short> i { *gas->ib.memory };
-  i += 0;
-  i += 1;
-  i += 2;
-  i += 3;
-  i += 1;
-  i += 0;
+  auto src = jojo::read("../glub/models/BoxAnimated.glb");
+  const auto t = glub::parse(src.begin(), src.size());
+  auto [v_count, i_count] = glub::mesh_counts::for_all_meshes(t);
 
-  i += 4;
-  i += 5;
-  i += 6;
-  i += 7;
-  i += 5;
-  i += 4;
+  gas->vb = voo::bound_buffer::create_from_host(
+      gas->dq.physical_device(),
+      sizeof(dotz::vec3) * v_count,
+      vee::buffer_usage::vertex_buffer);
+  gas->ib = voo::bound_buffer::create_from_host(
+      gas->dq.physical_device(),
+      sizeof(short) * i_count,
+      vee::buffer_usage::index_buffer);
 
-  i += 8;
-  i += 9;
-  i += 10;
-  i += 11;
-  i += 9;
-  i += 8;
-
-  voo::memiter<vtx> m { *gas->vb.memory };
-  // Currently in "camera coordinates"
-  m += { .pos { 0.5f, 0.5f, -0.5f }, .uv { 1, 1 } };
-  m += { .pos { 0.0f, 0.0f, -0.5f }, .uv { 0, 0 } };
-  m += { .pos { 0.5f, 0.0f, -0.5f }, .uv { 1, 0 } };
-  m += { .pos { 0.0f, 0.5f, -0.5f }, .uv { 0, 1 } };
-
-  m += { .pos {  0.25f,  0.25f, -0.3f }, .uv { 1, 1 } };
-  m += { .pos { -0.25f, -0.25f, -0.3f }, .uv { 0, 0 } };
-  m += { .pos {  0.25f, -0.25f, -0.3f }, .uv { 1, 0 } };
-  m += { .pos { -0.25f,  0.25f, -0.3f }, .uv { 0, 1 } };
-
-  m += { .pos {  0.0f,  0.0f, -0.1f }, .uv { 1, 1 } };
-  m += { .pos { -0.5f, -0.5f, -0.1f }, .uv { 0, 0 } };
-  m += { .pos {  0.0f, -0.5f, -0.1f }, .uv { 1, 0 } };
-  m += { .pos { -0.5f,  0.0f, -0.1f }, .uv { 0, 1 } };
+  unsigned i_acc = 0;
+  int v_acc = 0;
+  glub::mesh_counts::for_each(t, [&](auto mc) {
+    auto [v_count, i_count] = mc;
+    gas->xparams.push_back_doubling(vee::draw_indexed_params {
+      .xcount = i_count,
+      .first_x = i_acc,
+      .voffs = v_acc,
+    });
+    i_acc += i_count;
+    v_acc += v_count;
+  });
 
   casein::cursor_visible = false;
   casein::interrupt(casein::IRQ_CURSOR);
+
+  glub::load_all_indices(t, static_cast<unsigned short *>(*voo::mapmem { *gas->ib.memory }));
+  glub::load_all_vertices(t, static_cast<dotz::vec3 *>(*voo::mapmem { *gas->vb.memory }));
 }
 
 static void frame() {
@@ -166,7 +149,7 @@ static void frame() {
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
     vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
-    vee::cmd_draw_indexed(cb, max_vtx);
+    for (auto & p: gas->xparams) vee::cmd_draw_indexed(cb, p);
   });
   gss->sw.queue_present(gas->dq.queue());
 }
