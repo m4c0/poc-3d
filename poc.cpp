@@ -70,6 +70,10 @@ struct app_stuff {
       dq.physical_device(),
       sizeof(vtx) * max_vtx,
       vee::buffer_usage::vertex_buffer);
+  voo::bound_buffer ib = voo::bound_buffer::create_from_host(
+      dq.physical_device(),
+      sizeof(short) * max_vtx,
+      vee::buffer_usage::index_buffer);
 };
 static hai::uptr<app_stuff> gas {};
 
@@ -82,28 +86,44 @@ static hai::uptr<sized_stuff> gss {};
 static void init() {
   gas.reset(new app_stuff {});
 
+  voo::memiter<unsigned short> i { *gas->ib.memory };
+  i += 0;
+  i += 1;
+  i += 2;
+  i += 3;
+  i += 1;
+  i += 0;
+
+  i += 4;
+  i += 5;
+  i += 6;
+  i += 7;
+  i += 5;
+  i += 4;
+
+  i += 8;
+  i += 9;
+  i += 10;
+  i += 11;
+  i += 9;
+  i += 8;
+
   voo::memiter<vtx> m { *gas->vb.memory };
   // Currently in "camera coordinates"
   m += { .pos { 0.5f, 0.5f, -0.5f }, .uv { 1, 1 } };
   m += { .pos { 0.0f, 0.0f, -0.5f }, .uv { 0, 0 } };
   m += { .pos { 0.5f, 0.0f, -0.5f }, .uv { 1, 0 } };
   m += { .pos { 0.0f, 0.5f, -0.5f }, .uv { 0, 1 } };
-  m += { .pos { 0.0f, 0.0f, -0.5f }, .uv { 0, 0 } };
-  m += { .pos { 0.5f, 0.5f, -0.5f }, .uv { 1, 1 } };
 
   m += { .pos {  0.25f,  0.25f, -0.3f }, .uv { 1, 1 } };
   m += { .pos { -0.25f, -0.25f, -0.3f }, .uv { 0, 0 } };
   m += { .pos {  0.25f, -0.25f, -0.3f }, .uv { 1, 0 } };
   m += { .pos { -0.25f,  0.25f, -0.3f }, .uv { 0, 1 } };
-  m += { .pos { -0.25f, -0.25f, -0.3f }, .uv { 0, 0 } };
-  m += { .pos {  0.25f,  0.25f, -0.3f }, .uv { 1, 1 } };
 
   m += { .pos {  0.0f,  0.0f, -0.1f }, .uv { 1, 1 } };
   m += { .pos { -0.5f, -0.5f, -0.1f }, .uv { 0, 0 } };
   m += { .pos {  0.0f, -0.5f, -0.1f }, .uv { 1, 0 } };
   m += { .pos { -0.5f,  0.0f, -0.1f }, .uv { 0, 1 } };
-  m += { .pos { -0.5f, -0.5f, -0.1f }, .uv { 0, 0 } };
-  m += { .pos {  0.0f,  0.0f, -0.1f }, .uv { 1, 1 } };
 
   casein::cursor_visible = false;
   casein::interrupt(casein::IRQ_CURSOR);
@@ -120,7 +140,7 @@ static void frame() {
   if (dotz::sq_length(cam_delta) > 0) {
     float c = dotz::cos(g_pc.cam_rot.y);
     float s = dotz::sin(g_pc.cam_rot.y);
-    auto d = dotz::normalise(cam_delta) * ftime.millis() / 1000.0f;
+    auto d = dotz::normalise(cam_delta) * 2.0f * ftime.millis() / 1000.0f;
     g_pc.cam_pos.x += c * d.x + s * d.y;
     g_pc.cam_pos.z += -s * d.x + c * d.y;
   }
@@ -144,8 +164,9 @@ static void frame() {
     vee::cmd_set_scissor(cb, gss->sw.extent());
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
+    vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
     vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
-    vee::cmd_draw(cb, max_vtx);
+    vee::cmd_draw_indexed(cb, max_vtx);
   });
   gss->sw.queue_present(gas->dq.queue());
 }
