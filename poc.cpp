@@ -59,12 +59,15 @@ struct app_stuff {
     },
     .bindings {
       vee::vertex_input_bind(sizeof(dotz::vec3)),
+      vee::vertex_input_bind(sizeof(dotz::vec3)),
     },
     .attributes {
       vee::vertex_attribute_vec3(0, 0),
+      vee::vertex_attribute_vec3(1, 0),
     },
   });
   voo::bound_buffer vb;
+  voo::bound_buffer nb;
   voo::bound_buffer ib;
   hai::varray<vee::draw_indexed_params> xparams {};
 };
@@ -84,6 +87,10 @@ static void init() {
   auto [v_count, i_count] = glub::mesh_counts::for_all_meshes(t);
 
   gas->vb = voo::bound_buffer::create_from_host(
+      gas->dq.physical_device(),
+      sizeof(dotz::vec3) * v_count,
+      vee::buffer_usage::vertex_buffer);
+  gas->nb = voo::bound_buffer::create_from_host(
       gas->dq.physical_device(),
       sizeof(dotz::vec3) * v_count,
       vee::buffer_usage::vertex_buffer);
@@ -110,6 +117,7 @@ static void init() {
 
   glub::load_all_indices(t, static_cast<unsigned short *>(*voo::mapmem { *gas->ib.memory }));
   glub::load_all_vertices(t, static_cast<dotz::vec3 *>(*voo::mapmem { *gas->vb.memory }));
+  glub::load_all_normals(t, static_cast<dotz::vec3 *>(*voo::mapmem { *gas->nb.memory }));
 }
 
 static void frame() {
@@ -147,6 +155,7 @@ static void frame() {
     vee::cmd_set_scissor(cb, gss->sw.extent());
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
+    vee::cmd_bind_vertex_buffers(cb, 1, *gas->nb.buffer);
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
     vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
     for (auto & p: gas->xparams) vee::cmd_draw_indexed(cb, p);
