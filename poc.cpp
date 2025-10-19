@@ -79,7 +79,7 @@ static hai::uptr<sized_stuff> gss {};
 static void init() {
   gas.reset(new app_stuff {});
 
-  auto src = jojo::read("../glub/models/BoxAnimated.glb");
+  auto src = jojo::read("DamagedHelmet.glb");
   const auto t = glub::parse(src.begin(), src.size());
   auto [v_count, i_count] = glub::mesh_counts::for_all_meshes(t);
 

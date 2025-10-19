@@ -13,3 +13,8 @@ This is a "brain-dump" because Internet search is engagement-oriented nowadays.
 * Basic quad is X-right, Y-down, Z-outward (when depth-op is "less").
 * We can go from right-hand down-Y to right-hand up-Y with a flipped viewport,
   depth with op-greater and clockwise front-face, or flipping yz via shader.
+
+## Assets
+
+`DamagedHelmet.glb` is distributed under CC-BY-4.0/CC-BY-NC-4.0. Original file
+can be downloaded [here](https://github.khronos.org/glTF-Assets/model/DamagedHelmet)
