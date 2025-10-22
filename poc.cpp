@@ -30,6 +30,17 @@ static bool g_key_s = false;
 static bool g_key_a = false;
 static bool g_key_d = false;
 
+struct vertex {
+  dotz::vec3 position {};
+  float pad0;
+  dotz::vec3 normal {};
+  float pad1;
+  dotz::vec2 uv {};
+};
+struct batch {
+  vee::draw_indexed_params xparams {};
+  dotz::vec4 colour { 1, 1, 1, 1 };
+};
 struct app_stuff {
   voo::device_and_queue dq { "poc-3d", casein::native_ptr };
   vee::render_pass rp = vee::create_render_pass({
@@ -58,21 +69,17 @@ struct app_stuff {
       voo::shader("poc.frag.spv").pipeline_frag_stage(),
     },
     .bindings {
-      vee::vertex_input_bind(sizeof(dotz::vec3)),
-      vee::vertex_input_bind(sizeof(dotz::vec3)),
-      vee::vertex_input_bind(sizeof(dotz::vec2)),
+      vee::vertex_input_bind(sizeof(vertex)),
     },
     .attributes {
-      vee::vertex_attribute_vec3(0, 0),
-      vee::vertex_attribute_vec3(1, 0),
-      vee::vertex_attribute_vec2(2, 0),
+      vee::vertex_attribute_vec3(0, traits::offset_of(&vertex::position)),
+      vee::vertex_attribute_vec3(0, traits::offset_of(&vertex::normal)),
+      vee::vertex_attribute_vec2(0, traits::offset_of(&vertex::uv)),
     },
   });
   voo::bound_buffer vb;
-  voo::bound_buffer nb;
   voo::bound_buffer ib;
-  voo::bound_buffer ub;
-  hai::varray<vee::draw_indexed_params> xparams {};
+  hai::varray<batch> xparams {};
 };
 static hai::uptr<app_stuff> gas {};
 
@@ -82,50 +89,78 @@ struct sized_stuff {
 };
 static hai::uptr<sized_stuff> gss {};
 
+template<typename T>
+static auto cast(auto & acc, auto & t) {
+  auto & bv = t.buffer_views[acc.buffer_view];
+  auto ptr = reinterpret_cast<const T *>(t.data.begin() + acc.byte_offset + bv.byte_offset);
+  if ((void *)(ptr + acc.count) > t.data.end()) die("buffer overrun");
+  return ptr;
+}
 static void init() {
   gas.reset(new app_stuff {});
 
-  auto src = jojo::read("DamagedHelmet.glb");
+  auto src = jojo::read("../glub/models/BoxAnimated.glb");
   const auto t = glub::parse(src.begin(), src.size());
-  auto [v_count, i_count] = glub::mesh_counts::for_all_meshes(t);
-
-  gas->vb = voo::bound_buffer::create_from_host(
-      gas->dq.physical_device(),
-      sizeof(dotz::vec3) * v_count,
-      vee::buffer_usage::vertex_buffer);
-  gas->nb = voo::bound_buffer::create_from_host(
-      gas->dq.physical_device(),
-      sizeof(dotz::vec3) * v_count,
-      vee::buffer_usage::vertex_buffer);
-  gas->ub = voo::bound_buffer::create_from_host(
-      gas->dq.physical_device(),
-      sizeof(dotz::vec2) * v_count,
-      vee::buffer_usage::vertex_buffer);
-  gas->ib = voo::bound_buffer::create_from_host(
-      gas->dq.physical_device(),
-      sizeof(short) * i_count,
-      vee::buffer_usage::index_buffer);
 
   unsigned i_acc = 0;
   int v_acc = 0;
-  glub::mesh_counts::for_each(t, [&](auto mc) {
-    auto [v_count, i_count] = mc;
-    gas->xparams.push_back_doubling(vee::draw_indexed_params {
-      .xcount = i_count,
-      .first_x = i_acc,
-      .voffs = v_acc,
-    });
-    i_acc += i_count;
-    v_acc += v_count;
-  });
+  for (auto & m : t.meshes) {
+    for (auto & p : m.primitives) {
+      unsigned v_count = t.accessors[p.accessors.position].count;
+      unsigned x_count = t.accessors[p.indices].count;
+
+      gas->xparams.push_back_doubling(batch {
+        .xparams = vee::draw_indexed_params {
+          .xcount = x_count,
+          .first_x = i_acc,
+          .voffs = v_acc,
+        },
+      });
+      v_acc += v_count;
+      i_acc += x_count;
+    }
+  }
+
+  gas->vb = voo::bound_buffer::create_from_host(
+      gas->dq.physical_device(),
+      sizeof(vertex) * v_acc,
+      vee::buffer_usage::vertex_buffer);
+  gas->ib = voo::bound_buffer::create_from_host(
+      gas->dq.physical_device(),
+      sizeof(short) * i_acc,
+      vee::buffer_usage::index_buffer);
 
   casein::cursor_visible = false;
   casein::interrupt(casein::IRQ_CURSOR);
 
-  glub::load_all_indices(t, static_cast<unsigned short *>(*voo::mapmem { *gas->ib.memory }));
-  glub::load_all_vertices(t, static_cast<dotz::vec3 *>(*voo::mapmem { *gas->vb.memory }));
-  glub::load_all_normals(t, static_cast<dotz::vec3 *>(*voo::mapmem { *gas->nb.memory }));
-  glub::load_all_uvs(t, static_cast<dotz::vec2 *>(*voo::mapmem { *gas->ub.memory }));
+  voo::mapmem im { *gas->ib.memory }; auto ip = static_cast<unsigned short *>(*im);
+  voo::mapmem vm { *gas->vb.memory }; auto vp = static_cast<vertex *>(*vm);
+  for (auto & m : t.meshes) {
+    for (auto & p : m.primitives) {
+      auto & acc = t.accessors[p.indices];
+      auto ptr = cast<unsigned short>(acc, t);
+      for (auto i = 0; i < acc.count; i++) ip[i] = ptr[i];
+
+      if (p.accessors.position >= 0) {
+        auto & acc = t.accessors[p.accessors.position];
+        auto ptr = cast<dotz::vec3>(acc, t);
+        for (auto i = 0; i < acc.count; i++) vp[i].position = ptr[i];
+      }
+      if (p.accessors.normal >= 0) {
+        auto & acc = t.accessors[p.accessors.normal];
+        auto ptr = cast<dotz::vec3>(acc, t);
+        for (auto i = 0; i < acc.count; i++) vp[i].normal = ptr[i];
+      }
+      if (p.accessors.texcoord_0 >= 0) {
+        auto & acc = t.accessors[p.accessors.texcoord_0];
+        auto ptr = cast<dotz::vec2>(acc, t);
+        for (auto i = 0; i < acc.count; i++) vp[i].uv = ptr[i];
+      }
+
+      ip += acc.count;
+      vp += t.accessors[p.accessors.position].count;
+    }
+  }
 }
 
 static void frame() {
@@ -163,11 +198,11 @@ static void frame() {
     vee::cmd_set_scissor(cb, gss->sw.extent());
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
-    vee::cmd_bind_vertex_buffers(cb, 1, *gas->nb.buffer);
-    vee::cmd_bind_vertex_buffers(cb, 2, *gas->ub.buffer);
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
     vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
-    for (auto & p: gas->xparams) vee::cmd_draw_indexed(cb, p);
+    for (auto & p: gas->xparams) {
+      vee::cmd_draw_indexed(cb, p.xparams);
+    }
   });
   gss->sw.queue_present(gas->dq.queue());
 }
