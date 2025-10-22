@@ -6,6 +6,7 @@ layout(push_constant) uniform upc {
   float far;
   float near;
 
+  vec4 colour;
   vec3 cam_pos;
   vec3 cam_rot;
 
@@ -17,6 +18,7 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 uv;
 
 layout(location = 0) out vec2 f_uv;
+layout(location = 1) out vec4 f_colour;
 
 void main() {
   float asp = 1.0 / aspect;
@@ -50,4 +52,5 @@ void main() {
 
   gl_Position = proj * cam * vec4(pos.x, -pos.yz, 1);
   f_uv = uv;
+  f_colour = colour;
 }

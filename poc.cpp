@@ -20,6 +20,8 @@ struct upc {
   float far = 10.0;
   float near = 0.01;
 
+  dotz::vec4 colour { 1, 1, 1, 1 };
+
   dotz::vec4 cam_pos { 0, 0, 3, 0 };
   dotz::vec4 cam_rot { 0, 0, 0, 0 };
   float time;
@@ -108,6 +110,7 @@ static void init() {
     for (auto & p : m.primitives) {
       unsigned v_count = t.accessors[p.accessors.position].count;
       unsigned x_count = t.accessors[p.indices].count;
+      auto & c = t.materials[p.material].base_colour_factor;
 
       gas->xparams.push_back_doubling(batch {
         .xparams = vee::draw_indexed_params {
@@ -115,6 +118,7 @@ static void init() {
           .first_x = i_acc,
           .voffs = v_acc,
         },
+        .colour { c[0], c[1], c[2], c[3] },
       });
       v_acc += v_count;
       i_acc += x_count;
@@ -199,8 +203,9 @@ static void frame() {
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
-    vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
     for (auto & p: gas->xparams) {
+      g_pc.colour = p.colour;
+      vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
       vee::cmd_draw_indexed(cb, p.xparams);
     }
   });
