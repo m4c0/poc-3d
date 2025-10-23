@@ -62,7 +62,18 @@ struct app_stuff {
       vee::create_depth_dependency(),
     }},
   });
-  vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vertex_push_constant_range<upc>());
+  vee::sampler smp = vee::create_sampler(vee::linear_sampler);
+  voo::single_dset dset {
+    vee::dsl_fragment_samplers([this] {
+      hai::array<vee::sampler::type> res { 8 };
+      for (auto & s : res) s = *smp;
+      return res;
+    }()),
+    vee::combined_image_sampler(8),
+  };
+  vee::pipeline_layout pl = vee::create_pipeline_layout(
+      dset.descriptor_set_layout(),
+      vee::vertex_push_constant_range<upc>());
   vee::gr_pipeline gp = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
@@ -170,7 +181,8 @@ static void init() {
 
   gas->imgs.set_capacity(t.textures.size());
   auto imgptr = gas->imgs.begin();
-  for (auto & x : t.textures) {
+  for (auto xi = 0; xi < t.textures.size(); xi++, imgptr++) {
+    auto & x = t.textures[xi];
     auto & i = t.images[x.source];
     auto & bv = t.buffer_views[i.buffer_view];
     auto ptr = t.data.begin() + bv.byte_offset;
@@ -209,7 +221,7 @@ static void init() {
   
     f.wait();
 
-    imgptr++;
+    vee::update_descriptor_set(gas->dset.descriptor_set(), 0, xi, *imgptr->iv);
   }
 }
 
@@ -249,6 +261,7 @@ static void frame() {
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
+    vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dset.descriptor_set());
     for (auto & p: gas->xparams) {
       g_pc.colour = p.colour;
       vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
