@@ -8,6 +8,7 @@ import glub;
 import hai;
 import jojo;
 import sitime;
+import stubby;
 import traits;
 import vinyl;
 import voo;
@@ -82,6 +83,7 @@ struct app_stuff {
   voo::bound_buffer vb;
   voo::bound_buffer ib;
   hai::varray<batch> xparams {};
+  hai::array<voo::bound_image> imgs;
 };
 static hai::uptr<app_stuff> gas {};
 
@@ -101,7 +103,7 @@ static auto cast(auto & acc, auto & t) {
 static void init() {
   gas.reset(new app_stuff {});
 
-  auto src = jojo::read("../glub/models/BoxAnimated.glb");
+  auto src = jojo::read("../glub/models/DamagedHelmet.glb");
   const auto t = glub::parse(src.begin(), src.size());
 
   unsigned i_acc = 0;
@@ -164,6 +166,50 @@ static void init() {
       ip += acc.count;
       vp += t.accessors[p.accessors.position].count;
     }
+  }
+
+  gas->imgs.set_capacity(t.textures.size());
+  auto imgptr = gas->imgs.begin();
+  for (auto & x : t.textures) {
+    auto & i = t.images[x.source];
+    auto & bv = t.buffer_views[i.buffer_view];
+    auto ptr = t.data.begin() + bv.byte_offset;
+
+    auto img = stbi::load(ptr, bv.byte_length);
+    unsigned w = img.width;
+    unsigned h = img.height;
+    unsigned sz = w * h * 4;
+    auto host = voo::bound_buffer::create_from_host(gas->dq.physical_device(), sz);
+    {
+      voo::memiter<unsigned char> c { *host.memory };
+      for (auto i = 0; i < sz; i++) c[i] = (*img.data)[i];
+    }
+  
+    constexpr const auto fmt = VK_FORMAT_R8G8B8A8_SRGB;
+    vee::extent ext { w, h };
+    imgptr->img = vee::create_image(ext, fmt);
+    imgptr->mem = vee::create_local_image_memory(gas->dq.physical_device(), *imgptr->img);
+    vee::bind_image_memory(*imgptr->img, *imgptr->mem);
+    imgptr->iv = vee::create_image_view(*imgptr->img, fmt);
+  
+    voo::fence f { false };
+    auto cpool = gas->dq.queue()->create_command_pool();
+    auto cb = cpool.allocate_primary_command_buffer();
+  
+    {
+      voo::cmd_buf_one_time_submit ots { cb };
+      vee::cmd_pipeline_barrier(cb, *imgptr->img, vee::from_host_to_transfer);
+      vee::cmd_copy_buffer_to_image(cb, ext, *host.buffer, *imgptr->img);
+      vee::cmd_pipeline_barrier(cb, *imgptr->img, vee::from_transfer_to_fragment);
+    }
+    gas->dq.queue()->queue_submit({
+      .fence = f,
+      .command_buffer = cb,
+    });
+  
+    f.wait();
+
+    imgptr++;
   }
 }
 
