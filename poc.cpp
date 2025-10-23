@@ -43,6 +43,7 @@ struct vertex {
 struct batch {
   vee::draw_indexed_params xparams {};
   dotz::vec4 colour { 1, 1, 1, 1 };
+  int texcolour = -1;
 };
 struct app_stuff {
   voo::device_and_queue dq { "poc-3d", casein::native_ptr };
@@ -63,16 +64,10 @@ struct app_stuff {
     }},
   });
   vee::sampler smp = vee::create_sampler(vee::linear_sampler);
-  voo::single_dset dset {
-    vee::dsl_fragment_samplers([this] {
-      hai::array<vee::sampler::type> res { 8 };
-      for (auto & s : res) s = *smp;
-      return res;
-    }()),
-    vee::combined_image_sampler(8),
-  };
+  vee::descriptor_set_layout dsl = vee::create_descriptor_set_layout({ vee::dsl_fragment_samplers({ *smp }) });
+  vee::descriptor_pool dpool = vee::create_descriptor_pool(8, { vee::combined_image_sampler(8) });
   vee::pipeline_layout pl = vee::create_pipeline_layout(
-      dset.descriptor_set_layout(),
+      *dsl,
       vee::vertex_push_constant_range<upc>());
   vee::gr_pipeline gp = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
@@ -95,6 +90,7 @@ struct app_stuff {
   voo::bound_buffer ib;
   hai::varray<batch> xparams {};
   hai::array<voo::bound_image> imgs;
+  hai::array<vee::descriptor_set> dsets;
 };
 static hai::uptr<app_stuff> gas {};
 
@@ -124,6 +120,7 @@ static void init() {
       unsigned v_count = t.accessors[p.accessors.position].count;
       unsigned x_count = t.accessors[p.indices].count;
       auto & c = t.materials[p.material].base_colour_factor;
+      auto tc0 = t.materials[p.material].base_colour_texture.tex_coord;
 
       gas->xparams.push_back_doubling(batch {
         .xparams = vee::draw_indexed_params {
@@ -132,6 +129,7 @@ static void init() {
           .voffs = v_acc,
         },
         .colour { c[0], c[1], c[2], c[3] },
+        .texcolour = tc0,
       });
       v_acc += v_count;
       i_acc += x_count;
@@ -179,6 +177,7 @@ static void init() {
     }
   }
 
+  gas->dsets.set_capacity(t.textures.size());
   gas->imgs.set_capacity(t.textures.size());
   auto imgptr = gas->imgs.begin();
   for (auto xi = 0; xi < t.textures.size(); xi++, imgptr++) {
@@ -221,7 +220,8 @@ static void init() {
   
     f.wait();
 
-    vee::update_descriptor_set(gas->dset.descriptor_set(), 0, xi, *imgptr->iv);
+    gas->dsets[xi] = vee::allocate_descriptor_set(*gas->dpool, *gas->dsl);
+    vee::update_descriptor_set(gas->dsets[xi], 0, *imgptr->iv);
   }
 }
 
@@ -261,8 +261,8 @@ static void frame() {
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
-    vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dset.descriptor_set());
     for (auto & p: gas->xparams) {
+      if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
       g_pc.colour = p.colour;
       vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
       vee::cmd_draw_indexed(cb, p.xparams);
