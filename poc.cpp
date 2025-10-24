@@ -34,15 +34,14 @@ static bool g_key_a = false;
 static bool g_key_d = false;
 
 struct vertex {
-  dotz::vec3 position {};
-  float pad0;
-  dotz::vec3 normal {};
-  float pad1;
+  dotz::vec4 position {};
+  dotz::vec4 normal {};
   dotz::vec2 uv {};
 };
 struct batch {
   vee::draw_indexed_params xparams {};
   dotz::vec4 colour { 1, 1, 1, 1 };
+  int normal = -1;
   int texcolour = -1;
 };
 struct app_stuff {
@@ -64,11 +63,14 @@ struct app_stuff {
     }},
   });
   vee::sampler smp = vee::create_sampler(vee::linear_sampler);
-  vee::descriptor_set_layout dsl = vee::create_descriptor_set_layout({ vee::dsl_fragment_samplers({ *smp }) });
+  vee::descriptor_set_layout dsl = vee::create_descriptor_set_layout({
+    vee::dsl_fragment_samplers({ *smp }),
+  });
   vee::descriptor_pool dpool = vee::create_descriptor_pool(8, { vee::combined_image_sampler(8) });
-  vee::pipeline_layout pl = vee::create_pipeline_layout(
-      *dsl,
-      vee::vertex_push_constant_range<upc>());
+  vee::pipeline_layout pl = vee::create_pipeline_layout(vee::pipeline_layout_params {
+    .descriptor_set_layouts {{ *dsl, *dsl }},
+    .push_constant_ranges {{ vee::vertex_push_constant_range<upc>() }},
+  });
   vee::gr_pipeline gp = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
@@ -82,7 +84,7 @@ struct app_stuff {
     },
     .attributes {
       vee::vertex_attribute_vec3(0, traits::offset_of(&vertex::position)),
-      vee::vertex_attribute_vec3(0, traits::offset_of(&vertex::normal)),
+      vee::vertex_attribute_vec4(0, traits::offset_of(&vertex::normal)),
       vee::vertex_attribute_vec2(0, traits::offset_of(&vertex::uv)),
     },
   });
@@ -120,7 +122,8 @@ static void init() {
       unsigned v_count = t.accessors[p.accessors.position].count;
       unsigned x_count = t.accessors[p.indices].count;
       auto & c = t.materials[p.material].base_colour_factor;
-      auto tc0 = t.materials[p.material].base_colour_texture.tex_coord;
+      auto nor = t.materials[p.material].normal_texture.index;
+      auto tc0 = t.materials[p.material].base_colour_texture.index;
 
       gas->xparams.push_back_doubling(batch {
         .xparams = vee::draw_indexed_params {
@@ -129,6 +132,7 @@ static void init() {
           .voffs = v_acc,
         },
         .colour { c[0], c[1], c[2], c[3] },
+        .normal = nor,
         .texcolour = tc0,
       });
       v_acc += v_count;
@@ -159,12 +163,12 @@ static void init() {
       if (p.accessors.position >= 0) {
         auto & acc = t.accessors[p.accessors.position];
         auto ptr = cast<dotz::vec3>(acc, t);
-        for (auto i = 0; i < acc.count; i++) vp[i].position = ptr[i];
+        for (auto i = 0; i < acc.count; i++) vp[i].position = { ptr[i], 1 };
       }
       if (p.accessors.normal >= 0) {
         auto & acc = t.accessors[p.accessors.normal];
         auto ptr = cast<dotz::vec3>(acc, t);
-        for (auto i = 0; i < acc.count; i++) vp[i].normal = ptr[i];
+        for (auto i = 0; i < acc.count; i++) vp[i].normal = { ptr[i], 1 };
       }
       if (p.accessors.texcoord_0 >= 0) {
         auto & acc = t.accessors[p.accessors.texcoord_0];
@@ -263,6 +267,7 @@ static void frame() {
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
     for (auto & p: gas->xparams) {
       if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
+      if (p.normal >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 1, gas->dsets[p.normal]);
       g_pc.colour = p.colour;
       vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
       vee::cmd_draw_indexed(cb, p.xparams);
