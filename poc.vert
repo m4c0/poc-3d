@@ -20,6 +20,7 @@ layout(location = 2) in vec2 uv;
 
 layout(location = 0) out vec2 f_uv;
 layout(location = 1) out vec4 f_colour;
+layout(location = 2) out vec3 f_normal;
 
 void main() {
   float asp = 1.0 / aspect;
@@ -54,4 +55,5 @@ void main() {
   gl_Position = proj * cam * vec4(pos.x, -pos.yz, 1);
   f_uv = uv;
   f_colour = colour;
+  f_normal = normal;
 }
