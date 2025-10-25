@@ -110,7 +110,7 @@ static auto cast(auto & acc, auto & t) {
 static void init() {
   gas.reset(new app_stuff {});
 
-  auto src = jojo::read("../glub/models/DamagedHelmet.glb");
+  auto src = jojo::read("DamagedHelmet.glb");
   const auto t = glub::parse(src.begin(), src.size());
 
   unsigned i_acc = 0;
