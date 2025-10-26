@@ -13,6 +13,10 @@ layout(push_constant) uniform upc {
   float time;
 };
 
+layout(std140, set = 2, binding = 0) uniform uni {
+  vec4 x;
+};
+
 layout(location = 0) in vec4 pos;
 layout(location = 1) in vec3 normal;
 layout(location = 1, component = 3) in float has_normal;

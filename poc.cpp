@@ -33,6 +33,9 @@ static bool g_key_s = false;
 static bool g_key_a = false;
 static bool g_key_d = false;
 
+struct uniform {
+  dotz::vec4 x {};
+};
 struct vertex {
   dotz::vec4 position {};
   dotz::vec4 normal {};
@@ -63,12 +66,18 @@ struct app_stuff {
     }},
   });
   vee::sampler smp = vee::create_sampler(vee::linear_sampler);
-  vee::descriptor_set_layout dsl = vee::create_descriptor_set_layout({
+  vee::descriptor_set_layout dsl_smp = vee::create_descriptor_set_layout({
     vee::dsl_fragment_samplers({ *smp }),
   });
-  vee::descriptor_pool dpool = vee::create_descriptor_pool(8, { vee::combined_image_sampler(8) });
+  vee::descriptor_set_layout dsl_uni = vee::create_descriptor_set_layout({
+    vee::dsl_vertex_uniform(),
+  });
+  vee::descriptor_pool dpool = vee::create_descriptor_pool(8, {
+    vee::combined_image_sampler(8),
+    vee::uniform_buffer(8),
+  });
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::pipeline_layout_params {
-    .descriptor_set_layouts {{ *dsl, *dsl }},
+    .descriptor_set_layouts {{ *dsl_smp, *dsl_smp, *dsl_uni }},
     .push_constant_ranges {{ vee::vertex_push_constant_range<upc>() }},
   });
   vee::gr_pipeline gp = vee::create_graphics_pipeline({
@@ -88,6 +97,7 @@ struct app_stuff {
       vee::vertex_attribute_vec2(0, traits::offset_of(&vertex::uv)),
     },
   });
+  voo::bound_buffer ub;
   voo::bound_buffer vb;
   voo::bound_buffer ib;
   hai::array<voo::bound_image> imgs;
@@ -148,6 +158,10 @@ static void init() {
     }
   }
 
+  gas->ub = voo::bound_buffer::create_from_host(
+      gas->dq.physical_device(),
+      sizeof(uniform),
+      vee::buffer_usage::uniform_buffer);
   gas->vb = voo::bound_buffer::create_from_host(
       gas->dq.physical_device(),
       sizeof(vertex) * v_acc,
@@ -232,7 +246,7 @@ static void init() {
   
     f.wait();
 
-    gas->dsets[xi] = vee::allocate_descriptor_set(*gas->dpool, *gas->dsl);
+    gas->dsets[xi] = vee::allocate_descriptor_set(*gas->dpool, *gas->dsl_smp);
     vee::update_descriptor_set(gas->dsets[xi], 0, *imgptr->iv);
   }
 }
