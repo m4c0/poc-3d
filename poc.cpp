@@ -90,9 +90,10 @@ struct app_stuff {
   });
   voo::bound_buffer vb;
   voo::bound_buffer ib;
-  hai::varray<batch> xparams {};
   hai::array<voo::bound_image> imgs;
   hai::array<vee::descriptor_set> dsets;
+
+  hai::array<hai::array<batch>> xparams {};
 };
 static hai::uptr<app_stuff> gas {};
 
@@ -117,7 +118,13 @@ static void init() {
 
   unsigned i_acc = 0;
   int v_acc = 0;
+  gas->xparams.set_capacity(t.meshes.size());
+  auto mm = gas->xparams.begin();
   for (auto & m : t.meshes) {
+    *mm = hai::array<batch> { m.primitives.size() };
+    auto pp = mm->begin();
+    mm++;
+
     for (auto & p : m.primitives) {
       unsigned v_count = t.accessors[p.accessors.position].count;
       unsigned x_count = t.accessors[p.indices].count;
@@ -125,7 +132,7 @@ static void init() {
       auto nor = t.materials[p.material].normal_texture.index;
       auto tc0 = t.materials[p.material].base_colour_texture.index;
 
-      gas->xparams.push_back_doubling(batch {
+      *pp++ = batch {
         .xparams = vee::draw_indexed_params {
           .xcount = x_count,
           .first_x = i_acc,
@@ -134,7 +141,7 @@ static void init() {
         .colour { c[0], c[1], c[2], c[3] },
         .normal = nor,
         .texcolour = tc0,
-      });
+      };
       v_acc += v_count;
       i_acc += x_count;
     }
@@ -265,12 +272,14 @@ static void frame() {
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
-    for (auto & p: gas->xparams) {
-      if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
-      if (p.normal >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 1, gas->dsets[p.normal]);
-      g_pc.colour = p.colour;
-      vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
-      vee::cmd_draw_indexed(cb, p.xparams);
+    for (auto & m: gas->xparams) {
+      for (auto & p: m) {
+        if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
+        if (p.normal >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 1, gas->dsets[p.normal]);
+        g_pc.colour = p.colour;
+        vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
+        vee::cmd_draw_indexed(cb, p.xparams);
+      }
     }
   });
   gss->sw.queue_present(gas->dq.queue());
