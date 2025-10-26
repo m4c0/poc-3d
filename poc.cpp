@@ -93,6 +93,7 @@ struct app_stuff {
   hai::array<voo::bound_image> imgs;
   hai::array<vee::descriptor_set> dsets;
 
+  glub::t model;
   hai::array<hai::array<batch>> xparams {};
 };
 static hai::uptr<app_stuff> gas {};
@@ -114,7 +115,7 @@ static void init() {
   gas.reset(new app_stuff {});
 
   auto src = jojo::read("DamagedHelmet.glb");
-  const auto t = glub::parse(src.begin(), src.size());
+  const auto & t = gas->model = glub::parse(src.begin(), src.size());
 
   unsigned i_acc = 0;
   int v_acc = 0;
@@ -236,6 +237,22 @@ static void init() {
   }
 }
 
+static void enqueue_nodes(vee::command_buffer cb, const hai::array<int> & nodes) {
+  for (auto nidx : nodes) {
+    auto & n = gas->model.nodes[nidx];
+    enqueue_nodes(cb, n.children);
+
+    if (n.mesh >= 0) {
+      for (auto & p: gas->xparams[n.mesh]) {
+        if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
+        if (p.normal >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 1, gas->dsets[p.normal]);
+        g_pc.colour = p.colour;
+        vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
+        vee::cmd_draw_indexed(cb, p.xparams);
+      }
+    }
+  }
+}
 static void frame() {
   if (!gss) gss.reset(new sized_stuff {});
   
@@ -272,15 +289,8 @@ static void frame() {
     vee::cmd_bind_gr_pipeline(cb, *gas->gp);
     vee::cmd_bind_vertex_buffers(cb, 0, *gas->vb.buffer);
     vee::cmd_bind_index_buffer_u16(cb, *gas->ib.buffer);
-    for (auto & m: gas->xparams) {
-      for (auto & p: m) {
-        if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
-        if (p.normal >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 1, gas->dsets[p.normal]);
-        g_pc.colour = p.colour;
-        vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
-        vee::cmd_draw_indexed(cb, p.xparams);
-      }
-    }
+    
+    enqueue_nodes(cb, gas->model.scenes[gas->model.scene].nodes);
   });
   gss->sw.queue_present(gas->dq.queue());
 }
