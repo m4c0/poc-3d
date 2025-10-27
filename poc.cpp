@@ -34,7 +34,7 @@ static bool g_key_a = false;
 static bool g_key_d = false;
 
 struct uniform {
-  dotz::vec4 x {};
+  float x[16];
 };
 struct vertex {
   dotz::vec4 position {};
