@@ -14,7 +14,7 @@ layout(push_constant) uniform upc {
 };
 
 layout(std140, set = 2, binding = 0) uniform uni {
-  vec4 x;
+  mat4 view;
 };
 
 layout(location = 0) in vec4 pos;
@@ -56,7 +56,7 @@ void main() {
     -cam_pos.x, cam_pos.yz, 1
   );
 
-  gl_Position = proj * cam * vec4(pos.x, -pos.yz, 1);
+  gl_Position = proj * cam * view * vec4(pos.x, -pos.yz, 1);
   f_uv = uv;
   f_colour = colour;
   f_normal = normal;

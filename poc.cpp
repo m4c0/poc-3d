@@ -102,6 +102,7 @@ struct app_stuff {
   voo::bound_buffer ib;
   hai::array<voo::bound_image> imgs;
   hai::array<vee::descriptor_set> dsets;
+  vee::descriptor_set dset_uni;
 
   glub::t model;
   hai::array<hai::array<batch>> xparams {};
@@ -249,6 +250,22 @@ static void init() {
     gas->dsets[xi] = vee::allocate_descriptor_set(*gas->dpool, *gas->dsl_smp);
     vee::update_descriptor_set(gas->dsets[xi], 0, *imgptr->iv);
   }
+
+  gas->dset_uni = vee::allocate_descriptor_set(*gas->dpool, *gas->dsl_uni);
+
+  auto bi = vee::descriptor_buffer_info(*gas->ub.buffer);
+  vee::update_descriptor_set(vee::write_descriptor_set({
+    .dstSet = gas->dset_uni,
+    .descriptorCount = 1,
+    .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+    .pBufferInfo = &bi,
+  }));
+
+  voo::memiter<dotz::vec4> mub { *gas->ub.memory };
+  mub += dotz::vec4 { 0.7f, 0.0f, 0.7f, 0.0f };
+  mub += dotz::vec4 { 0, 1, 0, 0 };
+  mub += dotz::vec4 { -0.7f, 0.0f, 0.7f, 0.0f };
+  mub += dotz::vec4 { 0, 0, 0, 1 };
 }
 
 static void enqueue_nodes(vee::command_buffer cb, const hai::array<int> & nodes) {
@@ -260,6 +277,7 @@ static void enqueue_nodes(vee::command_buffer cb, const hai::array<int> & nodes)
       for (auto & p: gas->xparams[n.mesh]) {
         if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
         if (p.normal >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 1, gas->dsets[p.normal]);
+        vee::cmd_bind_descriptor_set(cb, *gas->pl, 2, gas->dset_uni);
         g_pc.colour = p.colour;
         vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
         vee::cmd_draw_indexed(cb, p.xparams);
