@@ -64,7 +64,7 @@ struct app_stuff {
     }},
   });
 
-  uni::t uni { dq.physical_device() };
+  uni::t uni { dq.physical_device(), 1 };
 
   vee::sampler smp = vee::create_sampler(vee::linear_sampler);
   vee::descriptor_set_layout dsl_smp = vee::create_descriptor_set_layout({
@@ -100,7 +100,6 @@ struct app_stuff {
   hai::array<vee::descriptor_set> dsets;
 
   glub::t model;
-  uni::t uniforms { dq.physical_device() };
   hai::array<hai::array<batch>> xparams {};
 };
 static hai::uptr<app_stuff> gas {};
@@ -243,7 +242,7 @@ static void init() {
     vee::update_descriptor_set(gas->dsets[xi], 0, *imgptr->iv);
   }
 
-  gas->uni.load({
+  gas->uni.load(0, {
     .mat {
       0.7f, 0.0f, 0.7f, 0.0f,
       0, 1, 0, 0,
@@ -262,7 +261,7 @@ static void enqueue_nodes(vee::command_buffer cb, const hai::array<int> & nodes)
       for (auto & p: gas->xparams[n.mesh]) {
         if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
         if (p.normal >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 1, gas->dsets[p.normal]);
-        vee::cmd_bind_descriptor_set(cb, *gas->pl, 2, gas->uni.dset());
+        vee::cmd_bind_descriptor_set(cb, *gas->pl, 2, gas->uni.dset(0));
         g_pc.colour = p.colour;
         vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
         vee::cmd_draw_indexed(cb, p.xparams);
