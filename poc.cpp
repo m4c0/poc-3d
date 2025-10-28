@@ -10,6 +10,7 @@ import jojo;
 import sitime;
 import stubby;
 import traits;
+import uni;
 import vinyl;
 import voo;
 
@@ -33,9 +34,6 @@ static bool g_key_s = false;
 static bool g_key_a = false;
 static bool g_key_d = false;
 
-struct uniform {
-  float x[16];
-};
 struct vertex {
   dotz::vec4 position {};
   dotz::vec4 normal {};
@@ -65,19 +63,18 @@ struct app_stuff {
       vee::create_depth_dependency(),
     }},
   });
+
+  uni::t uni { dq.physical_device() };
+
   vee::sampler smp = vee::create_sampler(vee::linear_sampler);
   vee::descriptor_set_layout dsl_smp = vee::create_descriptor_set_layout({
     vee::dsl_fragment_samplers({ *smp }),
   });
-  vee::descriptor_set_layout dsl_uni = vee::create_descriptor_set_layout({
-    vee::dsl_vertex_uniform(),
-  });
   vee::descriptor_pool dpool = vee::create_descriptor_pool(8, {
     vee::combined_image_sampler(8),
-    vee::uniform_buffer(8),
   });
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::pipeline_layout_params {
-    .descriptor_set_layouts {{ *dsl_smp, *dsl_smp, *dsl_uni }},
+    .descriptor_set_layouts {{ *dsl_smp, *dsl_smp, uni.dsl() }},
     .push_constant_ranges {{ vee::vertex_push_constant_range<upc>() }},
   });
   vee::gr_pipeline gp = vee::create_graphics_pipeline({
@@ -97,14 +94,13 @@ struct app_stuff {
       vee::vertex_attribute_vec2(0, traits::offset_of(&vertex::uv)),
     },
   });
-  voo::bound_buffer ub;
   voo::bound_buffer vb;
   voo::bound_buffer ib;
   hai::array<voo::bound_image> imgs;
   hai::array<vee::descriptor_set> dsets;
-  vee::descriptor_set dset_uni;
 
   glub::t model;
+  uni::t uniforms { dq.physical_device() };
   hai::array<hai::array<batch>> xparams {};
 };
 static hai::uptr<app_stuff> gas {};
@@ -159,10 +155,6 @@ static void init() {
     }
   }
 
-  gas->ub = voo::bound_buffer::create_from_host(
-      gas->dq.physical_device(),
-      sizeof(uniform),
-      vee::buffer_usage::uniform_buffer);
   gas->vb = voo::bound_buffer::create_from_host(
       gas->dq.physical_device(),
       sizeof(vertex) * v_acc,
@@ -251,21 +243,14 @@ static void init() {
     vee::update_descriptor_set(gas->dsets[xi], 0, *imgptr->iv);
   }
 
-  gas->dset_uni = vee::allocate_descriptor_set(*gas->dpool, *gas->dsl_uni);
-
-  auto bi = vee::descriptor_buffer_info(*gas->ub.buffer);
-  vee::update_descriptor_set(vee::write_descriptor_set({
-    .dstSet = gas->dset_uni,
-    .descriptorCount = 1,
-    .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-    .pBufferInfo = &bi,
-  }));
-
-  voo::memiter<dotz::vec4> mub { *gas->ub.memory };
-  mub += dotz::vec4 { 0.7f, 0.0f, 0.7f, 0.0f };
-  mub += dotz::vec4 { 0, 1, 0, 0 };
-  mub += dotz::vec4 { -0.7f, 0.0f, 0.7f, 0.0f };
-  mub += dotz::vec4 { 0, 0, 0, 1 };
+  gas->uni.load({
+    .mat {
+      0.7f, 0.0f, 0.7f, 0.0f,
+      0, 1, 0, 0,
+      -0.7f, 0.0f, 0.7f, 0.0f,
+      0, 0, 0, 1,
+    }
+  });
 }
 
 static void enqueue_nodes(vee::command_buffer cb, const hai::array<int> & nodes) {
@@ -277,7 +262,7 @@ static void enqueue_nodes(vee::command_buffer cb, const hai::array<int> & nodes)
       for (auto & p: gas->xparams[n.mesh]) {
         if (p.texcolour >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 0, gas->dsets[p.texcolour]);
         if (p.normal >= 0) vee::cmd_bind_descriptor_set(cb, *gas->pl, 1, gas->dsets[p.normal]);
-        vee::cmd_bind_descriptor_set(cb, *gas->pl, 2, gas->dset_uni);
+        vee::cmd_bind_descriptor_set(cb, *gas->pl, 2, gas->uni.dset());
         g_pc.colour = p.colour;
         vee::cmd_push_vertex_constants(cb, *gas->pl, &g_pc);
         vee::cmd_draw_indexed(cb, p.xparams);
