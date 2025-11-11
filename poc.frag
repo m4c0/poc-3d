@@ -2,6 +2,7 @@
 
 layout(set = 0, binding = 0) uniform sampler2D texcolour;
 layout(set = 1, binding = 0) uniform sampler2D normal;
+
 layout(std140, set = 2, binding = 0) uniform uni {
   mat4 view;
 };
