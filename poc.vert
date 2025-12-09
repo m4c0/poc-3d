@@ -24,7 +24,7 @@ layout(location = 2) in vec2 uv;
 
 layout(location = 0) out vec2 f_uv;
 layout(location = 1) out vec4 f_colour;
-layout(location = 2) out vec3 f_normal;
+layout(location = 2) out float f_diffuse;
 
 void main() {
   float asp = 1.0 / aspect;
@@ -55,9 +55,12 @@ void main() {
     0, 0, 1, 0,
     -cam_pos.x, cam_pos.yz, 1
   );
-
   gl_Position = proj * cam * view * vec4(pos.x, -pos.yz, 1);
+
+  vec3 light = normalize(vec3(cos(time), 1, sin(time)));
+  vec3 nrm = normalize((view * vec4(normal, 1)).rgb);
+  f_diffuse = mix(1, clamp(dot(nrm, light), 0, 1), has_normal);
+
   f_uv = uv;
   f_colour = colour;
-  f_normal = normal;
 }

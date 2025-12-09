@@ -25,7 +25,7 @@ struct upc {
   dotz::vec4 colour { 1, 1, 1, 1 };
 
   dotz::vec4 cam_pos { 0, 0, -3, 0 };
-  dotz::vec4 cam_rot { 0.0f, 3.14f, 0.0f, 0.0f };
+  dotz::vec3 cam_rot { 0.0f, 3.14f, 0.0f };
   float time;
 } g_pc;
 

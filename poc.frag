@@ -11,8 +11,9 @@ layout(location = 0) out vec4 colour;
 
 layout(location = 0) in vec2 f_uv;
 layout(location = 1) in vec4 f_colour;
-layout(location = 2) in vec3 f_normal;
+layout(location = 2) in float f_diffuse;
 
 void main() {
-  colour = f_colour * texture(texcolour, f_uv);
+  vec4 c = f_colour * texture(texcolour, f_uv);
+  colour = vec4(c.rgb * f_diffuse, c.a);
 }
