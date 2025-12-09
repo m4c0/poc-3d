@@ -23,6 +23,7 @@ struct upc {
   float near = 0.01;
 
   dotz::vec4 colour { 1, 1, 1, 1 };
+  dotz::vec4 light { -1, 0, 0, 0 };
 
   dotz::vec4 cam_pos { 0, 0, -3, 0 };
   dotz::vec3 cam_rot { 0.0f, 3.14f, 0.0f };

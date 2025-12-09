@@ -7,6 +7,8 @@ layout(push_constant) uniform upc {
   float near;
 
   vec4 colour;
+  vec4 light;
+
   vec3 cam_pos;
   vec3 cam_rot;
 
@@ -57,9 +59,11 @@ void main() {
   );
   gl_Position = proj * cam * view * vec4(pos.x, -pos.yz, 1);
 
-  vec3 light = normalize(vec3(cos(time), 1, sin(time)));
-  vec3 nrm = normalize((view * vec4(normal, 1)).rgb);
-  f_diffuse = mix(1, clamp(dot(nrm, light), 0, 1), has_normal);
+  mat3 nrm_mat = mat3(transpose(inverse(view)));
+
+  vec3 lgt = normalize(light.rgb);
+  vec3 nrm = normalize(nrm_mat * normal);
+  f_diffuse = mix(1, clamp(dot(nrm, lgt), 0, 1), has_normal);
 
   f_uv = uv;
   f_colour = colour;
