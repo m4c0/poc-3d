@@ -120,7 +120,7 @@ static auto cast(auto & acc, auto & t) {
 static void init() {
   gas.reset(new app_stuff {});
 
-  auto src = jojo::read("DamagedHelmet.glb");
+  auto src = jojo::slurp("DamagedHelmet.glb");
   const auto & t = gas->model = glub::parse(src.begin(), src.size());
 
   unsigned i_acc = 0;
@@ -222,7 +222,7 @@ static void init() {
     imgptr->iv = vee::create_image_view(*imgptr->img, fmt);
   
     voo::fence f { false };
-    auto cpool = gas->dq.queue()->create_command_pool();
+    voo::command_pool cpool {};
     auto cb = cpool.allocate_primary_command_buffer();
   
     {
@@ -287,7 +287,7 @@ static void frame() {
   ftime = {};
 
   gss->sw.acquire_next_image();
-  gss->sw.queue_one_time_submit(gas->dq.queue(), [&] {
+  gss->sw.queue_one_time_submit([&] {
     static sitime::stopwatch time {};
     g_pc.aspect = gss->sw.aspect();
     g_pc.time = time.millis() / 1000.0f;
@@ -308,7 +308,7 @@ static void frame() {
     
     enqueue_nodes(cb, gas->model.scenes[gas->model.scene].nodes);
   });
-  gss->sw.queue_present(gas->dq.queue());
+  gss->sw.queue_present();
 }
 
 const auto i = [] {
