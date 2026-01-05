@@ -83,8 +83,8 @@ struct app_stuff {
     .render_pass = *rp,
     .depth = vee::depth::op_less(),
     .shaders {
-      voo::shader("poc.vert.spv").pipeline_vert_stage(),
-      voo::shader("poc.frag.spv").pipeline_frag_stage(),
+      voo::vert_shader("poc.vert.spv").pipeline_stage(),
+      voo::frag_shader("poc.frag.spv").pipeline_stage(),
     },
     .bindings {
       vee::vertex_input_bind(sizeof(vertex)),
@@ -314,7 +314,7 @@ static void frame() {
 
 const auto i = [] {
   using namespace vinyl;
-  on(START,  &init);
+  on(START,  &::init);
   on(RESIZE, [] { gss.reset(nullptr); });
   on(FRAME,  &frame);
   on(STOP,   [] { 
