@@ -11,6 +11,9 @@ struct app_stuff;
 struct ext_stuff;
 using vv = vinyl::v<app_stuff, ext_stuff>;
 
+struct upc {
+  float aspect;
+};
 struct vtx {
   dotz::vec4 pos;
 };
@@ -19,7 +22,7 @@ struct app_stuff : vinyl::base_app_stuff {
   clay::buffer<vtx> vbuf { 6 };
 
   vee::render_pass rp = voo::single_att_render_pass(dq);
-  vee::pipeline_layout pl = vee::create_pipeline_layout();
+  vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vertex_push_constant_range<upc>());
   vee::gr_pipeline ppl = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
@@ -55,8 +58,13 @@ extern "C" void casein_init() {
     vv::ss()->frame([] {
       auto rp = vv::ss()->clear({ 0, 0, 0, 1 });
 
+      upc pc {
+        .aspect = vv::ss()->sw.aspect(),
+      };
+
       auto cb = vv::ss()->sw.command_buffer();
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->ppl);
+      vee::cmd_push_vertex_constants(cb, *vv::as()->pl, &pc);
       vv::as()->vbuf.bind(cb);
       vee::cmd_draw(cb, vv::as()->vbuf.count());
     });
