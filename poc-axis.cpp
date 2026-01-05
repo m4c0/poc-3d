@@ -23,7 +23,7 @@ struct app_stuff : vinyl::base_app_stuff {
   vee::gr_pipeline ppl = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
-    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
     .back_face_cull = false,
     .shaders {
       *clay::vert_shader("poc-axis", [] {}),
