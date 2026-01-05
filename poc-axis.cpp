@@ -13,6 +13,7 @@ using vv = vinyl::v<app_stuff, ext_stuff>;
 
 struct upc {
   float aspect;
+  float fov = 90;
 };
 struct vtx {
   dotz::vec4 pos;
