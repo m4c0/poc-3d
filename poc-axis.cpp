@@ -74,9 +74,15 @@ extern "C" void casein_init() {
       };
 
 #ifdef LECO_TARGET_WASM
+      using namespace gelo;
+
       if (!vv::as()->prog) return;
 
-      using namespace gelo;
+      static unsigned u_aspect = get_uniform_location(vv::as()->prog.id(), "pc.aspect");
+      static unsigned u_fov    = get_uniform_location(vv::as()->prog.id(), "pc.fov");
+
+      uniform1f(u_aspect, pc.aspect);
+      uniform1f(u_fov,    90);
       draw_arrays(TRIANGLES, 0, vv::as()->vbuf.count());
 #else
       auto cb = vv::ss()->sw.command_buffer();
