@@ -79,10 +79,11 @@ extern "C" void casein_init() {
       if (!vv::as()->prog) return;
 
       static unsigned u_aspect = get_uniform_location(vv::as()->prog.id(), "pc.aspect");
-      static unsigned u_fov    = get_uniform_location(vv::as()->prog.id(), "pc.fov");
+      static unsigned u_fov    = get_uniform_location(vv::as()->prog.id(), "pc.fov_deg");
+      silog::assert(u_aspect && u_fov, "missing uniforms");
 
       uniform1f(u_aspect, pc.aspect);
-      uniform1f(u_fov,    90);
+      uniform1f(u_fov,    pc.fov);
       draw_arrays(TRIANGLES, 0, vv::as()->vbuf.count());
 #else
       auto cb = vv::ss()->sw.command_buffer();
