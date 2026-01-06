@@ -1,4 +1,6 @@
+#ifndef LECO_TARGET_WASM
 #pragma leco app
+#endif
 #pragma leco add_shader "poc.vert"
 #pragma leco add_shader "poc.frag"
 
