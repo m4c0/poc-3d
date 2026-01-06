@@ -41,13 +41,13 @@ struct app_stuff : vinyl::base_app_stuff {
 
   app_stuff() : base_app_stuff { "poc-3d" } {
     auto m = vbuf.map();
-    m += vtx { .pos { -0.5, -0.5, 0.5, 1.0 } };
-    m += vtx { .pos {  0.5, -0.5, 0.5, 1.0 } };
-    m += vtx { .pos { -0.5,  0.5, 0.5, 1.0 } };
+    m += vtx { .pos { -0.9, -0.9, 0.9, 1.0 } };
+    m += vtx { .pos {  0.9, -0.9, 0.9, 1.0 } };
+    m += vtx { .pos { -0.9,  0.9, 0.9, 1.0 } };
 
-    m += vtx { .pos {  0.5,  0.5, 0.5, 1.0 } };
-    m += vtx { .pos {  0.5, -0.5, 0.5, 1.0 } };
-    m += vtx { .pos { -0.5,  0.5, 0.5, 1.0 } };
+    m += vtx { .pos {  0.9,  0.9, 0.9, 1.0 } };
+    m += vtx { .pos {  0.9, -0.9, 0.9, 1.0 } };
+    m += vtx { .pos { -0.9,  0.9, 0.9, 1.0 } };
   }
 };
 struct ext_stuff : vinyl::base_extent_stuff {
