@@ -28,7 +28,6 @@ struct app_stuff : vinyl::base_app_stuff {
     .pipeline_layout = *pl,
     .render_pass = *rp,
     .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-    .back_face_cull = false,
     .shaders {
       *clay::vert_shader("poc-axis", [] {}),
       *clay::frag_shader("poc-axis", [] {}),
@@ -41,13 +40,15 @@ struct app_stuff : vinyl::base_app_stuff {
 
   app_stuff() : base_app_stuff { "poc-3d" } {
     auto m = vbuf.map();
+    // note: these are technically "flipped", as their front should point to
+    // positive Z
     m += vtx { .pos { -0.9, -0.9, 0.9, 1.0 } };
     m += vtx { .pos {  0.9, -0.9, 0.9, 1.0 } };
     m += vtx { .pos { -0.9,  0.9, 0.9, 1.0 } };
 
     m += vtx { .pos {  0.9,  0.9, 0.9, 1.0 } };
-    m += vtx { .pos {  0.9, -0.9, 0.9, 1.0 } };
     m += vtx { .pos { -0.9,  0.9, 0.9, 1.0 } };
+    m += vtx { .pos {  0.9, -0.9, 0.9, 1.0 } };
   }
 };
 struct ext_stuff : vinyl::base_extent_stuff {
