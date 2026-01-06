@@ -49,6 +49,11 @@ struct app_stuff : vinyl::base_app_stuff {
 #endif
 
   app_stuff() : base_app_stuff { "poc-3d" } {
+#ifdef LECO_TARGET_WASM
+    vbuf.bind();
+    clay::buffer<vtx>::vertex_attribute(&vtx::pos, false)(0);
+#endif
+
     auto m = vbuf.map();
 
     m += vtx { .pos { -0.9, -0.9, 0.9, 1.0 } };
