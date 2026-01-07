@@ -54,6 +54,10 @@ struct app_stuff : vinyl::base_app_stuff {
 #ifdef LECO_TARGET_WASM
     vbuf.bind();
     clay::buffer<vtx>::vertex_attribute(&vtx::pos, false)(0);
+
+    using namespace gelo;
+    enable(DEPTH_TEST);
+    enable(CULL_FACE);
 #endif
 
     auto m = vbuf.map();
@@ -135,6 +139,7 @@ extern "C" void casein_init() {
       uniform1f(u_aspect, pc.aspect);
       uniform1f(u_fov,    pc.fov);
       uniform1f(u_time,   pc.time);
+      clear_depth(1);
       draw_arrays(TRIANGLES, 0, vv::as()->vbuf.count());
 #else
       auto cb = vv::ss()->sw.command_buffer();
