@@ -13,20 +13,14 @@ const float far  = 10.0;
 
 void main() {
   float f = 1.0 / tan(radians(pc.fov_deg) / 2.0);
-  mat4 proj = mat4(
-    f / pc.aspect, 0, 0, 0,
-    0, f, 0, 0,
-    0, 0, far / (far - near), 1,
-    0, 0, -far * near / (far - near), 0
-  );
 
-  mat4 model = mat4(
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 3, 1
-  );
+  vec3 p = pos.xyz + vec3(0, 0, 3);
 
-  gl_Position = proj * model * pos;
+  gl_Position = vec4(
+    p.x * f / pc.aspect,
+    p.y * f,
+    p.z * far / (far - near) - (far * near) / (far - near),
+    p.z
+  );
   f_pos = pos;
 }
