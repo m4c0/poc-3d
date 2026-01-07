@@ -26,7 +26,7 @@ struct vtx {
 };
 
 struct app_stuff : vinyl::base_app_stuff {
-  clay::buffer<vtx> vbuf { 6 };
+  clay::buffer<vtx> vbuf { 36 };
 
 #ifdef LECO_TARGET_WASM
   clay::program prog { "poc-axis" };
@@ -56,13 +56,45 @@ struct app_stuff : vinyl::base_app_stuff {
 
     auto m = vbuf.map();
 
-    m += vtx { .pos { -0.9, -0.9, 0.9, 1.0 } };
-    m += vtx { .pos {  0.9, -0.9, 0.9, 1.0 } };
-    m += vtx { .pos { -0.9,  0.9, 0.9, 1.0 } };
+    // Back
+    m += vtx { .pos { -0.9, -0.9, 1.0, 1.0 } };
+    m += vtx { .pos {  0.9, -0.9, 1.0, 1.0 } };
+    m += vtx { .pos { -0.9,  0.9, 1.0, 1.0 } };
+    m += vtx { .pos {  0.9,  0.9, 1.0, 1.0 } };
+    m += vtx { .pos { -0.9,  0.9, 1.0, 1.0 } };
+    m += vtx { .pos {  0.9, -0.9, 1.0, 1.0 } };
 
-    m += vtx { .pos {  0.9,  0.9, 0.9, 1.0 } };
-    m += vtx { .pos { -0.9,  0.9, 0.9, 1.0 } };
-    m += vtx { .pos {  0.9, -0.9, 0.9, 1.0 } };
+    // Bottom
+    m += vtx { .pos { -0.9, -1.0, -0.9, 1.0 } };
+    m += vtx { .pos {  0.9, -1.0, -0.9, 1.0 } };
+    m += vtx { .pos { -0.9, -1.0,  0.9, 1.0 } };
+    m += vtx { .pos {  0.9, -1.0,  0.9, 1.0 } };
+    m += vtx { .pos { -0.9, -1.0,  0.9, 1.0 } };
+    m += vtx { .pos {  0.9, -1.0, -0.9, 1.0 } };
+
+    // Top
+    m += vtx { .pos { -0.9,  1.0, -0.9, 1.0 } };
+    m += vtx { .pos { -0.9,  1.0,  0.9, 1.0 } };
+    m += vtx { .pos {  0.9,  1.0, -0.9, 1.0 } };
+    m += vtx { .pos {  0.9,  1.0,  0.9, 1.0 } };
+    m += vtx { .pos {  0.9,  1.0, -0.9, 1.0 } };
+    m += vtx { .pos { -0.9,  1.0,  0.9, 1.0 } };
+ 
+    // Left
+    m += vtx { .pos { -1.0, -0.9, -0.9, 1.0 } };
+    m += vtx { .pos { -1.0, -0.9,  0.9, 1.0 } };
+    m += vtx { .pos { -1.0,  0.9, -0.9, 1.0 } };
+    m += vtx { .pos { -1.0,  0.9,  0.9, 1.0 } };
+    m += vtx { .pos { -1.0,  0.9, -0.9, 1.0 } };
+    m += vtx { .pos { -1.0, -0.9,  0.9, 1.0 } };
+ 
+    // Right
+    m += vtx { .pos {  1.0, -0.9, -0.9, 1.0 } };
+    m += vtx { .pos {  1.0,  0.9, -0.9, 1.0 } };
+    m += vtx { .pos {  1.0, -0.9,  0.9, 1.0 } };
+    m += vtx { .pos {  1.0,  0.9,  0.9, 1.0 } };
+    m += vtx { .pos {  1.0, -0.9,  0.9, 1.0 } };
+    m += vtx { .pos {  1.0,  0.9, -0.9, 1.0 } };
   }
 };
 struct ext_stuff : vinyl::base_extent_stuff {

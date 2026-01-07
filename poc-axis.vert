@@ -20,6 +20,13 @@ void main() {
     0, 0, -far * near / (far - near), 0
   );
 
-  gl_Position = proj * pos;
+  mat4 model = mat4(
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 3, 1
+  );
+
+  gl_Position = proj * model * pos;
   f_pos = pos;
 }
