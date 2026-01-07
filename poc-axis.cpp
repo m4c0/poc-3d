@@ -33,12 +33,13 @@ struct app_stuff : vinyl::base_app_stuff {
 #ifdef LECO_TARGET_WASM
   clay::program prog { "poc-axis" };
 #else
-  vee::render_pass rp = voo::single_att_render_pass(dq);
+  vee::render_pass rp = voo::single_att_depth_render_pass(dq);
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vertex_push_constant_range<upc>());
   vee::gr_pipeline ppl = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
     .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+    .depth = vee::depth::op_less(),
     .shaders {
       *clay::vert_shader("poc-axis", [] {}),
       *clay::frag_shader("poc-axis", [] {}),
@@ -62,7 +63,7 @@ struct app_stuff : vinyl::base_app_stuff {
 
     auto m = vbuf.map();
 
-    // Back
+    // Front
     m += vtx { .pos { -0.9, -0.9, 1.0, 1.0 } };
     m += vtx { .pos {  0.9, -0.9, 1.0, 1.0 } };
     m += vtx { .pos { -0.9,  0.9, 1.0, 1.0 } };
@@ -70,6 +71,7 @@ struct app_stuff : vinyl::base_app_stuff {
     m += vtx { .pos { -0.9,  0.9, 1.0, 1.0 } };
     m += vtx { .pos {  0.9, -0.9, 1.0, 1.0 } };
 
+    // Back
     m += vtx { .pos { -0.9, -0.9, -1.0, 1.0 } };
     m += vtx { .pos {  0.9, -0.9, -1.0, 1.0 } };
     m += vtx { .pos { -0.9,  0.9, -1.0, 1.0 } };
