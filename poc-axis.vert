@@ -16,10 +16,15 @@ void main() {
   float f = 1.0 / tan(radians(pc.fov_deg) / 2.0);
 
   float a = pc.time;
+  float b = sin(pc.time / 3.14);
   mat3 rot = mat3(
     cos(a), 0, sin(a),
     0, 1, 0,
     -sin(a), 0, cos(a)
+  ) * mat3(
+    1, 0, 0,
+    0,  cos(b), sin(b),
+    0, -sin(b), cos(b)
   );
 
   vec3 p = rot * pos.xyz + vec3(0, 0, -3);
