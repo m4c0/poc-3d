@@ -33,6 +33,10 @@ struct app_stuff : vinyl::base_app_stuff {
 #ifdef LECO_TARGET_WASM
   clay::program prog { "poc-axis" };
 #else
+  struct sconst {
+    float ndc_mult = 1;
+    float ndc_add  = 0;
+  };
   vee::render_pass rp = voo::single_att_depth_render_pass(dq);
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vertex_push_constant_range<upc>());
   vee::gr_pipeline ppl = vee::create_graphics_pipeline({
@@ -41,7 +45,10 @@ struct app_stuff : vinyl::base_app_stuff {
     .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
     .depth = vee::depth::op_less(),
     .shaders {
-      *clay::vert_shader("poc-axis", [] {}),
+      clay::vert_shader("poc-axis", [] {}).pipeline_stage("main", vee::specialisation_info<sconst>({
+        vee::specialisation_map_entry(0, &sconst::ndc_mult),
+        vee::specialisation_map_entry(1, &sconst::ndc_add),
+      })),
       *clay::frag_shader("poc-axis", [] {}),
     },
     .bindings { vbuf.vertex_input_bind() },

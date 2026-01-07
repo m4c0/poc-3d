@@ -1,5 +1,8 @@
 #version 450
 
+layout(constant_id = 0) const float ndc_z_mult = 2.0;
+layout(constant_id = 1) const float ndc_z_add  = 1.0;
+
 layout(push_constant) uniform upc {
   float aspect;
   float fov_deg;
@@ -28,13 +31,13 @@ void main() {
   );
 
   vec3 p = rot * pos.xyz + vec3(0, 0, 3);
-
   p.x *= -1; // Left-hand to right-hand
-  gl_Position = vec4(
+  p = vec3( // Projection
     p.x * f / pc.aspect,
     p.y * f,
-    far * (p.z - near) / (far - near),
-    p.z
-  );
+    far * (p.z - near) / (far - near)
+  ) / p.z; // Applying "w"
+  p.z = p.z * ndc_z_mult - ndc_z_add; // Fix NDC
+  gl_Position = vec4(p, 1);
   f_pos = pos;
 }
