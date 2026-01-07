@@ -4,6 +4,7 @@
 
 import clay;
 import dotz;
+import sitime;
 import vinyl;
 
 #ifdef LECO_TARGET_WASM
@@ -20,6 +21,7 @@ using vv = vinyl::v<app_stuff, ext_stuff>;
 struct upc {
   float aspect;
   float fov = 90;
+  float time;
 };
 struct vtx {
   dotz::vec4 pos;
@@ -64,6 +66,13 @@ struct app_stuff : vinyl::base_app_stuff {
     m += vtx { .pos { -0.9,  0.9, 1.0, 1.0 } };
     m += vtx { .pos {  0.9, -0.9, 1.0, 1.0 } };
 
+    m += vtx { .pos { -0.9, -0.9, -1.0, 1.0 } };
+    m += vtx { .pos {  0.9, -0.9, -1.0, 1.0 } };
+    m += vtx { .pos { -0.9,  0.9, -1.0, 1.0 } };
+    m += vtx { .pos {  0.9,  0.9, -1.0, 1.0 } };
+    m += vtx { .pos { -0.9,  0.9, -1.0, 1.0 } };
+    m += vtx { .pos {  0.9, -0.9, -1.0, 1.0 } };
+
     // Bottom
     m += vtx { .pos { -0.9, -1.0, -0.9, 1.0 } };
     m += vtx { .pos {  0.9, -1.0, -0.9, 1.0 } };
@@ -104,10 +113,13 @@ struct ext_stuff : vinyl::base_extent_stuff {
 extern "C" void casein_init() {
   vv::setup([] {
     vv::ss()->frame([] {
+      static sitime::stopwatch timer {};
+
       [[maybe_unused]] auto rp = vv::ss()->clear({ 0, 0, 0, 1 });
 
       upc pc {
         .aspect = vv::ss()->aspect(),
+        .time = timer.secs(),
       };
 
 #ifdef LECO_TARGET_WASM
@@ -117,10 +129,12 @@ extern "C" void casein_init() {
 
       static unsigned u_aspect = get_uniform_location(vv::as()->prog.id(), "pc.aspect");
       static unsigned u_fov    = get_uniform_location(vv::as()->prog.id(), "pc.fov_deg");
+      static unsigned u_time   = get_uniform_location(vv::as()->prog.id(), "pc.time");
       silog::assert(u_aspect && u_fov, "missing uniforms");
 
       uniform1f(u_aspect, pc.aspect);
       uniform1f(u_fov,    pc.fov);
+      uniform1f(u_time,   pc.time);
       draw_arrays(TRIANGLES, 0, vv::as()->vbuf.count());
 #else
       auto cb = vv::ss()->sw.command_buffer();

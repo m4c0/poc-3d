@@ -3,6 +3,7 @@
 layout(push_constant) uniform upc {
   float aspect;
   float fov_deg;
+  float time;
 } pc;
 
 layout(location = 0) in  vec4 pos;
@@ -14,7 +15,14 @@ const float far  = 10.0;
 void main() {
   float f = 1.0 / tan(radians(pc.fov_deg) / 2.0);
 
-  vec3 p = pos.xyz + vec3(0, 0, 3);
+  float a = pc.time;
+  mat3 rot = mat3(
+    cos(a), 0, sin(a),
+    0, 1, 0,
+    -sin(a), 0, cos(a)
+  );
+
+  vec3 p = rot * pos.xyz + vec3(0, 0, 3);
 
   gl_Position = vec4(
     p.x * f / pc.aspect,
