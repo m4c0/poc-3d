@@ -19,7 +19,7 @@ void main() {
   gl_Position = vec4(
     p.x * f / pc.aspect,
     p.y * f,
-    p.z * far / (far - near) - (far * near) / (far - near),
+    far * (p.z - near) / (far - near),
     p.z
   );
   f_pos = pos;
