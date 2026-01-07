@@ -12,10 +12,10 @@ const float near =  0.01;
 const float far  = 10.0;
 
 void main() {
-  float fov = radians(pc.fov_deg);
+  float f = 1.0 / tan(radians(pc.fov_deg) / 2.0);
   mat4 proj = mat4(
-    1 / (pc.aspect * tan(fov / 2)), 0, 0, 0,
-    0, 1 / tan(fov / 2), 0, 0,
+    f / pc.aspect, 0, 0, 0,
+    0, f, 0, 0,
     0, 0, far / (far - near), 1,
     0, 0, -far * near / (far - near), 0
   );
