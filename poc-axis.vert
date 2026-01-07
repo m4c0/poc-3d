@@ -27,9 +27,9 @@ void main() {
     0, -sin(b), cos(b)
   );
 
-  vec3 p = rot * pos.xyz + vec3(0, 0, -3);
+  vec3 p = rot * pos.xyz + vec3(0, 0, 3);
 
-  p.z *= -1; // Left-hand to right-hand
+  p.x *= -1; // Left-hand to right-hand
   gl_Position = vec4(
     p.x * f / pc.aspect,
     p.y * f,
