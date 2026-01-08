@@ -14,7 +14,7 @@ const float far  = 10.0;
 void main() {
   float f = 1.0 / tan(radians(pc.fov_deg) / 2.0);
 
-  vec3 p = pos.xyz + vec3(0, 0, 3);
+  vec3 p = pos.xyz + vec3(0, -1, 3); // Vertex + Model
   p.x *= -1; // Left-hand to right-hand
   p = vec3( // Projection
     p.x * f / pc.aspect,
