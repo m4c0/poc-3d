@@ -79,8 +79,25 @@ namespace cube {
   };
 }
 
+namespace inst {
+  struct t {
+    dotz::vec3 pos;
+    float _pad;
+  };
+
+  struct buffer : clay::buffer<t> {
+    buffer() : clay::buffer<t> { 100 } {
+      auto m = map();
+      m += t { .pos { 0, -1, 3 } };
+      m += t { .pos { 1, -1, 3 } };
+      m += t { .pos { -1, -1, 3 } };
+    }
+  };
+}
+
 struct app_stuff : vinyl::base_app_stuff {
   cube::buffer cube {};
+  inst::buffer insts {};
 
   vee::render_pass rp = voo::single_att_depth_render_pass(dq);
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vertex_push_constant_range<upc>());
@@ -88,16 +105,19 @@ struct app_stuff : vinyl::base_app_stuff {
     .pipeline_layout = *pl,
     .render_pass = *rp,
     .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-    .back_face_cull = false,
     .depth = vee::depth::op_less(),
     .shaders {
       *clay::vert_shader("poc-mcish", [] {}),
       *clay::frag_shader("poc-mcish", [] {}),
     },
-    .bindings { cube::buffer::vertex_input_bind() },
+    .bindings {
+      cube::buffer::vertex_input_bind(),
+      inst::buffer::vertex_input_bind_per_instance(),
+    },
     .attributes { 
       vee::vertex_attribute_vec3(0, traits::offset_of(&cube::vtx::pos)),
       vee::vertex_attribute_vec2(0, traits::offset_of(&cube::vtx::uv)),
+      vee::vertex_attribute_vec3(1, traits::offset_of(&inst::t::pos)),
     },
   });
 
@@ -120,7 +140,8 @@ extern "C" void casein_init() {
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->ppl);
       vee::cmd_push_vertex_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_vertex_buffers(cb, 0, *vv::as()->cube, 0);
-      vee::cmd_draw(cb, vv::as()->cube.count());
+      vee::cmd_bind_vertex_buffers(cb, 1, *vv::as()->insts, 0);
+      vee::cmd_draw(cb, vv::as()->cube.count(), vv::as()->insts.count());
     });
   });
 }
