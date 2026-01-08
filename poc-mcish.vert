@@ -18,12 +18,12 @@ void main() {
 
   vec3 p = pos.xyz + vec3(0, -1, 3); // Vertex + Model
   p.x *= -1; // Left-hand to right-hand
-  p = vec3( // Projection
+  gl_Position = vec4( // Projection
     p.x * f / pc.aspect,
     p.y * f,
-    far * (p.z - near) / (far - near)
-  ) / p.z; // Applying "w"
-  gl_Position = vec4(p, 1);
+    far * (p.z - near) / (far - near),
+    p.z
+  );
 
   f_uv = uv;
 }
