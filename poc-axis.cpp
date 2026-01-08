@@ -34,6 +34,10 @@
 // This example does some minimal math to keep a right-handed coordinate system
 // with Y pointing up and Z outwards camera. Changing this is as simple as
 // flipping individual axis.
+//
+// Note: the vertex shader pre-applies "gl_Position.w", but this will impact
+// interpolation of data shared between vertex and fragment shader (uv,
+// colour, etc)
 /******************************************************************************/
 #pragma leco app
 #pragma leco add_shader "poc-axis.frag"
