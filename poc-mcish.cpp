@@ -4,6 +4,7 @@
 
 import clay;
 import dotz;
+import traits;
 import vinyl;
 import voo;
 
@@ -18,7 +19,9 @@ struct upc {
 
 namespace cube {
   struct vtx {
-    dotz::vec4 pos;
+    dotz::vec3 pos;
+    float _pad;
+    dotz::vec2 uv;
   };
 
   struct buffer : public clay::buffer<vtx> {
@@ -26,56 +29,52 @@ namespace cube {
       auto m = map();
 
       // Front
-      m += vtx { .pos { -0.5, -0.5, 0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5, 0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5, 0.5, 0.5 } };
-      m += vtx { .pos {  0.5,  0.5, 0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5, 0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5, 0.5, 0.5 } };
+      m += vtx { .pos { -0.5, -0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5,  0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5,  0.5 }, .uv { 1, 1 } };
 
       // Back
-      m += vtx { .pos { -0.5, -0.5, -0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5, -0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5, -0.5, 0.5 } };
-      m += vtx { .pos {  0.5,  0.5, -0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5, -0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5, -0.5, 0.5 } };
+      m += vtx { .pos { -0.5, -0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5,  0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5, -0.5 }, .uv { 1, 1 } };
 
       // Bottom
-      m += vtx { .pos { -0.5, -0.5, -0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5, -0.5, 0.5 } };
-      m += vtx { .pos { -0.5, -0.5,  0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5,  0.5, 0.5 } };
-      m += vtx { .pos { -0.5, -0.5,  0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5, -0.5, 0.5 } };
+      m += vtx { .pos { -0.5, -0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5, -0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5, -0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5, -0.5 }, .uv { 1, 1 } };
 
       // Top
-      m += vtx { .pos { -0.5,  0.5, -0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5,  0.5, 0.5 } };
-      m += vtx { .pos {  0.5,  0.5, -0.5, 0.5 } };
-      m += vtx { .pos {  0.5,  0.5,  0.5, 0.5 } };
-      m += vtx { .pos {  0.5,  0.5, -0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5,  0.5, 0.5 } };
+      m += vtx { .pos { -0.5,  0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5,  0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5,  0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5,  0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5,  0.5 }, .uv { 1, 1 } };
 
       // Left
-      m += vtx { .pos { -0.5, -0.5, -0.5, 0.5 } };
-      m += vtx { .pos { -0.5, -0.5,  0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5, -0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5,  0.5, 0.5 } };
-      m += vtx { .pos { -0.5,  0.5, -0.5, 0.5 } };
-      m += vtx { .pos { -0.5, -0.5,  0.5, 0.5 } };
+      m += vtx { .pos { -0.5, -0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5, -0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5,  0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos { -0.5, -0.5,  0.5 }, .uv { 1, 1 } };
 
       // Right
-      m += vtx { .pos {  0.5, -0.5, -0.5, 0.5 } };
-      m += vtx { .pos {  0.5,  0.5, -0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5,  0.5, 0.5 } };
-      m += vtx { .pos {  0.5,  0.5,  0.5, 0.5 } };
-      m += vtx { .pos {  0.5, -0.5,  0.5, 0.5 } };
-      m += vtx { .pos {  0.5,  0.5, -0.5, 0.5 } };
-    }
-
-    [[nodiscard]] static auto vertex_attribute() {
-      return clay::buffer<vtx>::vertex_attribute(&vtx::pos);
+      m += vtx { .pos {  0.5, -0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5,  0.5, -0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5,  0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5, -0.5,  0.5 }, .uv { 1, 1 } };
+      m += vtx { .pos {  0.5,  0.5, -0.5 }, .uv { 1, 1 } };
     }
   };
 }
@@ -95,7 +94,10 @@ struct app_stuff : vinyl::base_app_stuff {
       *clay::frag_shader("poc-mcish", [] {}),
     },
     .bindings { cube::buffer::vertex_input_bind() },
-    .attributes { cube::buffer::vertex_attribute() },
+    .attributes { 
+      vee::vertex_attribute_vec3(0, traits::offset_of(&cube::vtx::pos)),
+      vee::vertex_attribute_vec2(0, traits::offset_of(&cube::vtx::uv)),
+    },
   });
 
   app_stuff() : base_app_stuff { "poc-mcish" } {}

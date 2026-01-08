@@ -5,8 +5,10 @@ layout(push_constant) uniform upc {
   float fov_deg;
 } pc;
 
-layout(location = 0) in  vec4 pos;
-layout(location = 0) out vec4 f_pos;
+layout(location = 0) in vec3 pos;
+layout(location = 1) in vec2 uv;
+
+layout(location = 0) out vec2 f_uv;
 
 const float near =  0.01;
 const float far  = 10.0;
@@ -22,5 +24,6 @@ void main() {
     far * (p.z - near) / (far - near)
   ) / p.z; // Applying "w"
   gl_Position = vec4(p, 1);
-  f_pos = pos;
+
+  f_uv = uv;
 }
