@@ -4,6 +4,8 @@
 
 import clay;
 import dotz;
+import silog;
+import sitime;
 import traits;
 import vinyl;
 import voo;
@@ -142,6 +144,17 @@ extern "C" void casein_init() {
       vee::cmd_bind_vertex_buffers(cb, 0, *vv::as()->cube, 0);
       vee::cmd_bind_vertex_buffers(cb, 1, *vv::as()->insts, 0);
       vee::cmd_draw(cb, vv::as()->cube.count(), vv::as()->insts.count());
+
+      static struct count {
+        sitime::stopwatch w {};
+        int i = 0;
+        ~count() { silog::infof(">>>> %.3f", i / w.secs()); }
+      } * cnt = new count {};
+      cnt->i++;
+      if (cnt->w.secs() > 3) {
+        delete cnt;
+        cnt = new count {};
+      }
     });
   });
 }
