@@ -1,3 +1,40 @@
+/******************************************************************************/
+// This draws a rotating cube with open edges.
+//
+// Faces are coloured based on their vertex model positions. This visually
+// represents each axis (X, Y, Z) as a gradient from black to a primary colour
+// (R, G, B). Therefore we can get a visual feedback of the axis alignments.
+//
+// This project runs in both Vulkan and WASM, mostly to use WASM as a "control
+// group". Vulkan has way too many options that impacts the output. Making
+// Vulkan align with WebGL made it easier to reason and compare.
+//
+// The main "trick" is how to convert any input (3D vertices, in this case) to
+// NDC space. Then from NDC to screen space.
+//
+// Both NDC and screen spaces are different between Vulkan and WebGL.
+//
+// Vulkan's NDC ranges from (-1,-1,0) to (1,1,1) whilst WebGL ranges from
+// (-1,-1,-1) to (1,1,1). The Z range only affects clipping.
+//
+// The "Y" coordinate is flipped between Vulkan and WebGL's screen coordinates.
+// Vulkan supports flipping that by using negative viewport size.
+//
+// Finally, the whole "perspective matrix" calculation is simple. Matrices like
+// those used in gluPerspective apply these semi-independent rules:
+// - Scaling (x, y) by the field-of-view (calculated with the tangent of the
+//   half of the FOV angle). Which can be avoided if FOV is 90 degrees (since
+//   tan(90/2) = 1)
+// - Scaling X by screen aspect. Which would not be needed for a square screen
+//   space.
+// - Dividing (x, y) by z for the perspective effect
+// - Mapping Z to NDC's Z (i.e. given Z in [near;far] range, transform it to
+//   [0;1] or [-1;1] - the math is simpler than it looks)
+//
+// This example does some minimal math to keep a right-handed coordinate system
+// with Y pointing up and Z outwards camera. Changing this is as simple as
+// flipping individual axis.
+/******************************************************************************/
 #pragma leco app
 #pragma leco add_shader "poc-axis.frag"
 #pragma leco add_shader "poc-axis.vert"
