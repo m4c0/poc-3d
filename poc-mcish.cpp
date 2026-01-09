@@ -88,11 +88,13 @@ namespace inst {
   };
 
   struct buffer : clay::buffer<t> {
-    buffer() : clay::buffer<t> { 100 } {
+    buffer() : clay::buffer<t> { 128 * 128 } {
       auto m = map();
-      m += t { .pos { 0, -1, 3 } };
-      m += t { .pos { 1, -1, 3 } };
-      m += t { .pos { -1, -1, 3 } };
+      for (auto x = 0; x < 128; x++) {
+        for (auto y = 0; y < 128; y++) {
+          m += t { .pos { x - 64, -1, y - 64 } };
+        }
+      }
     }
   };
 }
