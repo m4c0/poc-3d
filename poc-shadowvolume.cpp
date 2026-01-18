@@ -43,7 +43,7 @@ struct app_stuff : vinyl::base_app_stuff {
     .pipeline_layout = *pl,
     .render_pass = *rp,
     .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-    .back_face_cull = false,
+    // .back_face_cull = false,
     .depth = vee::depth::op_less(),
     .shaders {
       *voo::vert_shader("poc-shadowvolume.vert.spv"),
@@ -86,11 +86,11 @@ struct app_stuff : vinyl::base_app_stuff {
     // Bottom Shadows
     msx += {{ 1, 2, 0 }};
     msx += {{ 4, 3, 0 }};
-    msx += {{ 1, 3, 0 }};
-    msx += {{ 4, 2, 0 }};
+    msx += {{ 3, 1, 0 }};
+    msx += {{ 2, 4, 0 }};
     // Top Shadows
-    msx += {{ 5, 6, 0 }};
-    msx += {{ 8, 7, 0 }};
+    msx += {{ 6, 5, 0 }};
+    msx += {{ 7, 8, 0 }};
     msx += {{ 5, 7, 0 }};
     msx += {{ 8, 6, 0 }};
   }
