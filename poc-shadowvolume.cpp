@@ -9,9 +9,9 @@
 #pragma leco add_shader "poc-shadowvolume.frag"
 #pragma leco add_shader "poc-shadowvolume.vert"
 
-import clay;
 import dotz;
 import sitime;
+import traits;
 import vinyl;
 import voo;
 
@@ -30,7 +30,7 @@ struct vtx {
 };
 
 struct app_stuff : vinyl::base_app_stuff {
-  clay::buffer<vtx> vbuf { 1024 };
+  voo::bound_buffer vbuf = voo::bound_buffer::create_from_host(1024 * sizeof(vtx), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 
   vee::render_pass rp = voo::single_att_depth_render_pass(dq);
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vert_frag_push_constant_range<upc>());
@@ -41,17 +41,19 @@ struct app_stuff : vinyl::base_app_stuff {
     .back_face_cull = false,
     .depth = vee::depth::op_less(),
     .shaders {
-      *clay::vert_shader("poc-shadowvolume", [] {}),
-      *clay::frag_shader("poc-shadowvolume", [] {}),
+      *voo::vert_shader("poc-shadowvolume.vert.spv"),
+      *voo::frag_shader("poc-shadowvolume.frag.spv"),
     },
-    .bindings { vbuf.vertex_input_bind() },
+    .bindings {
+      vee::vertex_input_bind(sizeof(vtx)),
+    },
     .attributes {
-      clay::buffer<vtx>::vertex_attribute(&vtx::pos),
+      vee::vertex_attribute_vec4(0, traits::offset_of(&vtx::pos)),
     },
   });
 
   app_stuff() : base_app_stuff { "poc-3d" } {
-    auto m = vbuf.map();
+    auto m = voo::memiter<vtx> { *vbuf.memory };
 
     dotz::vec4 light {};
 
@@ -99,7 +101,7 @@ extern "C" void casein_init() {
 
       auto cb = vv::ss()->sw.command_buffer();
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->ppl);
-      vv::as()->vbuf.bind(cb);
+      vee::cmd_bind_vertex_buffers(cb, 0, *vv::as()->vbuf.buffer);
 
       // bottom
       pc.colour = { 0, 1, 0, 1 };
