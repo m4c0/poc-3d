@@ -96,6 +96,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .writeMask = ~0U,
       },
     }),
+    .blends { VkPipelineColorBlendAttachmentState {} },
     .shaders {
       *voo::vert_shader("poc-shadowvolume.vert.spv"),
       *voo::frag_shader("poc-shadowvolume.frag.spv"),
