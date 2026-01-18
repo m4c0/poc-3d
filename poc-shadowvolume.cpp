@@ -58,35 +58,38 @@ struct app_stuff : vinyl::base_app_stuff {
   app_stuff() : base_app_stuff { "poc-3d" } {
     auto m = voo::memiter<vtx> { *vbuf.memory };
 
-    dotz::vec4 light {};
+    // Light (w = 0, signaling shader to use light vector)
+    m += vtx { .pos {} };
 
     // Bottom
     m += vtx { .pos { -0.9, -1.0, -0.9, 1.0 } };
     m += vtx { .pos {  0.9, -1.0, -0.9, 1.0 } };
     m += vtx { .pos { -0.9, -1.0,  0.9, 1.0 } };
     m += vtx { .pos {  0.9, -1.0,  0.9, 1.0 } };
-    m += vtx { .pos { -0.9, -1.0,  0.9, 1.0 } };
-    m += vtx { .pos {  0.9, -1.0, -0.9, 1.0 } };
 
     // Top
     m += vtx { .pos { -0.9,  1.0, -0.9, 1.0 } };
     m += vtx { .pos { -0.9,  1.0,  0.9, 1.0 } };
     m += vtx { .pos {  0.9,  1.0, -0.9, 1.0 } };
     m += vtx { .pos {  0.9,  1.0,  0.9, 1.0 } };
-    m += vtx { .pos {  0.9,  1.0, -0.9, 1.0 } };
-    m += vtx { .pos { -0.9,  1.0,  0.9, 1.0 } };
 
+    struct tri { uint16_t x[3]; };
+    auto mx = voo::memiter<tri> { *xbuf.memory };
+    // Bottom
+    mx += {{ 1, 2, 3 }}; mx += {{ 4, 3, 2 }};
     // Top
-    m += vtx { .pos { -0.9,  1.0, -0.9, 1.0 } };
-    m += vtx { .pos = light };
-    m += vtx { .pos {  0.9,  1.0, -0.9, 1.0 } };
-
-    m += vtx { .pos { -0.9, -1.0, -0.9, 1.0 } };
-    m += vtx { .pos = light };
-    m += vtx { .pos {  0.9, -1.0, -0.9, 1.0 } };
-
-    auto mx = voo::memiter<uint16_t> { *xbuf.memory };
-    for (auto i = 0; i < 18; i++) mx += i;
+    mx += {{ 5, 6, 7 }}; mx += {{ 8, 7, 6 }};
+    
+    // Bottom Shadows
+    mx += {{ 1, 2, 0 }};
+    mx += {{ 4, 3, 0 }};
+    mx += {{ 1, 3, 0 }};
+    mx += {{ 4, 2, 0 }};
+    // Top Shadows
+    mx += {{ 5, 6, 0 }};
+    mx += {{ 8, 7, 0 }};
+    mx += {{ 5, 7, 0 }};
+    mx += {{ 8, 6, 0 }};
   }
 };
 struct ext_stuff : vinyl::base_extent_stuff {
@@ -123,7 +126,7 @@ extern "C" void casein_init() {
       // shadow edge
       pc.colour = { 1, 0, 0, 0.3 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
-      vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 12 });
+      vee::cmd_draw_indexed(cb, { .xcount = 24, .first_x = 12 });
     });
   });
 }
