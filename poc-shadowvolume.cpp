@@ -35,6 +35,8 @@ struct app_stuff : vinyl::base_app_stuff {
   voo::bound_buffer vbuf = voo::bound_buffer::create_from_host(1024 * sizeof(vtx), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
   voo::bound_buffer xbuf = voo::bound_buffer::create_from_host(1024 * sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
+  voo::bound_buffer shd_xbuf = voo::bound_buffer::create_from_host(1024 * sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+
   vee::render_pass rp = voo::single_att_depth_render_pass(dq);
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vert_frag_push_constant_range<upc>());
   vee::gr_pipeline ppl = vee::create_graphics_pipeline({
@@ -80,16 +82,17 @@ struct app_stuff : vinyl::base_app_stuff {
     // Top
     mx += {{ 5, 6, 7 }}; mx += {{ 8, 7, 6 }};
     
+    auto msx = voo::memiter<tri> { *shd_xbuf.memory };
     // Bottom Shadows
-    mx += {{ 1, 2, 0 }};
-    mx += {{ 4, 3, 0 }};
-    mx += {{ 1, 3, 0 }};
-    mx += {{ 4, 2, 0 }};
+    msx += {{ 1, 2, 0 }};
+    msx += {{ 4, 3, 0 }};
+    msx += {{ 1, 3, 0 }};
+    msx += {{ 4, 2, 0 }};
     // Top Shadows
-    mx += {{ 5, 6, 0 }};
-    mx += {{ 8, 7, 0 }};
-    mx += {{ 5, 7, 0 }};
-    mx += {{ 8, 6, 0 }};
+    msx += {{ 5, 6, 0 }};
+    msx += {{ 8, 7, 0 }};
+    msx += {{ 5, 7, 0 }};
+    msx += {{ 8, 6, 0 }};
   }
 };
 struct ext_stuff : vinyl::base_extent_stuff {
@@ -126,7 +129,8 @@ extern "C" void casein_init() {
       // shadow edge
       pc.colour = { 1, 0, 0, 0.3 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
-      vee::cmd_draw_indexed(cb, { .xcount = 24, .first_x = 12 });
+      vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
+      vee::cmd_draw_indexed(cb, { .xcount = 24 });
     });
   });
 }
