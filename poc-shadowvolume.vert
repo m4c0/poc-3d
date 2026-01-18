@@ -16,22 +16,24 @@ void main() {
 
   float a = pc.time;
   float b = sin(pc.time / 3.14);
-  mat3 rot = mat3(
-    cos(a), 0, sin(a),
-    0, 1, 0,
-    -sin(a), 0, cos(a)
-  ) * mat3(
-    1, 0, 0,
-    0,  cos(b), sin(b),
-    0, -sin(b), cos(b)
+  mat4 rot = mat4(
+    cos(a), 0, sin(a), 0,
+    0, 1, 0, 0,
+    -sin(a), 0, cos(a), 0,
+    0, 0, 0, 1
+  ) * mat4(
+    1, 0, 0, 0,
+    0,  cos(b), sin(b), 0,
+    0, -sin(b), cos(b), 0,
+    0, 0, 0, 1
   );
 
-  vec3 p = rot * pos.xyz + vec3(0, 0, 3);
+  vec4 p = rot * pos + vec4(0, 0, 3, 0);
   p.x *= -1; // Left-hand to right-hand
-  gl_Position = vec4( // Projection
-    p.x * f / pc.aspect,
-    p.y * f,
-    far * (p.z - near) / (far - near),
-    p.z
-  );
+  gl_Position = mat4(
+    f / pc.aspect, 0, 0, 0,
+    0, f, 0, 0,
+    0, 0, far / (far - near), 1,
+    0, 0, -(far * near) / (far - near), 0
+  ) * p;
 }
