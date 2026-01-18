@@ -60,8 +60,12 @@ struct app_stuff : vinyl::base_app_stuff {
     .pipeline_layout = *pl,
     .render_pass = *rp,
     .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-    // .back_face_cull = false,
-    .depth = vee::depth::op_less(),
+    .back_face_cull = false,
+    .depth = vee::depth::of({
+      .depthTestEnable = vk_true,
+      .depthWriteEnable = vk_true,
+      .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
+    }),
     .shaders {
       *voo::vert_shader("poc-shadowvolume.vert.spv"),
       *voo::frag_shader("poc-shadowvolume.frag.spv"),
@@ -97,6 +101,43 @@ struct app_stuff : vinyl::base_app_stuff {
       },
     }),
     .blends { VkPipelineColorBlendAttachmentState {} },
+    .shaders {
+      *voo::vert_shader("poc-shadowvolume.vert.spv"),
+      *voo::frag_shader("poc-shadowvolume.frag.spv"),
+    },
+    .bindings {
+      vee::vertex_input_bind(sizeof(vtx)),
+    },
+    .attributes {
+      vee::vertex_attribute_vec4(0, traits::offset_of(&vtx::pos)),
+    },
+  });
+
+  vee::gr_pipeline light_ppl = vee::create_graphics_pipeline({
+    .pipeline_layout = *pl,
+    .render_pass = *rp,
+    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+    .back_face_cull = false,
+    .depth = vee::depth::of({
+      .depthTestEnable = vk_true,
+      .depthWriteEnable = vk_false,
+      .depthCompareOp = VK_COMPARE_OP_EQUAL,
+      .stencilTestEnable = vk_true,
+      .front = {
+        .failOp = VK_STENCIL_OP_KEEP,
+        .passOp = VK_STENCIL_OP_KEEP,
+        .depthFailOp = VK_STENCIL_OP_KEEP,
+        .compareOp = VK_COMPARE_OP_EQUAL,
+        .writeMask = ~0U,
+      },
+      .back = {
+        .failOp = VK_STENCIL_OP_KEEP,
+        .passOp = VK_STENCIL_OP_KEEP,
+        .depthFailOp = VK_STENCIL_OP_KEEP,
+        .compareOp = VK_COMPARE_OP_EQUAL,
+        .writeMask = ~0U,
+      },
+    }),
     .shaders {
       *voo::vert_shader("poc-shadowvolume.vert.spv"),
       *voo::frag_shader("poc-shadowvolume.frag.spv"),
@@ -194,20 +235,23 @@ extern "C" void casein_init() {
       pc.colour = { 0, 1, 0, 1 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 0 });
-
       // top
       pc.colour = { 0, 0, 1, 1 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 6 });
 
-      // TODO: stencil pipeline
-
       // shadow edge
-      pc.colour = { 1, 0, 0, 0.3 };
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->shd_ppl);
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 24 });
+
+      // lights
+      pc.colour = { 1, 0, 0, 1 };
+      vee::cmd_bind_gr_pipeline(cb, *vv::as()->light_ppl);
+      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
+      vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
+      vee::cmd_draw_indexed(cb, { .xcount = 12, .first_x = 0 });
     });
     vv::ss()->swc.queue_present();
   });
