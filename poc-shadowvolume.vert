@@ -29,7 +29,9 @@ void main() {
     0, 0, 0, 1
   );
 
-  vec4 p = rot * pos + vec4(0, 0, 3, 0);
+  vec4 p = pos.w == 0
+    ? vec4(-1, -1, 0, 0) // Point at infinity, oriented to the light
+    : rot * pos + vec4(0, 0, 3, 0);
   p.x *= -1; // Left-hand to right-hand
   gl_Position = mat4(
     f / pc.aspect, 0, 0, 0,
