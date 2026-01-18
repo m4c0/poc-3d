@@ -10,6 +10,7 @@
 #pragma leco add_shader "poc-shadowvolume.vert"
 
 import dotz;
+import hai;
 import sitime;
 import traits;
 import vinyl;
@@ -38,7 +39,22 @@ struct app_stuff : vinyl::base_app_stuff {
 
   voo::bound_buffer shd_xbuf = voo::bound_buffer::create_from_host(1024 * sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
-  vee::render_pass rp = voo::single_att_depth_render_pass(dq);
+  vee::render_pass rp = vee::create_render_pass({
+    .attachments {{
+      vee::create_colour_attachment(dq.physical_device(), dq.surface()),
+      vee::create_depth_stencil_attachment(),
+    }},
+    .subpasses {{
+      vee::create_subpass({
+        .colours {{ vee::create_attachment_ref(0, vee::image_layout_color_attachment_optimal) }},
+        .depth_stencil = vee::create_attachment_ref(1, vee::image_layout_depth_stencil_attachment_optimal),
+      }),
+    }},
+    .dependencies {{
+      vee::create_colour_dependency(),
+      vee::create_depth_dependency(),
+    }},
+  });
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vert_frag_push_constant_range<upc>());
   vee::gr_pipeline ppl = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
@@ -96,38 +112,43 @@ struct app_stuff : vinyl::base_app_stuff {
     msx += {{ 8, 6, 0 }};
   }
 };
+static auto depth_image_info() {
+  auto ext = vv::as()->dq.extent_of();
+  return vee::image_create_info(ext, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+}
 struct ext_stuff {
-  vee::render_pass rp; 
-  voo::bound_image depth;
-  voo::swapchain_and_stuff sw;
-
-  ext_stuff() :
-    rp { voo::single_att_depth_render_pass(vv::as()->dq) }
-  , depth { voo::bound_image::create_depth(vv::as()->dq.extent_of(), 0) }
-  , sw { vv::as()->dq, *rp, *depth.iv }
-  {}
+  voo::single_cb cb {};
+  voo::bound_image depth = voo::bound_image::create(depth_image_info(), VK_IMAGE_ASPECT_DEPTH_BIT);
+  voo::swapchain swc { vv::as()->dq };
+  hai::array<vee::framebuffer> fbs = swc.create_framebuffers(*vv::as()->rp, *depth.iv);
 };
 
 extern "C" void casein_init() {
   vv::setup([] {
-    vv::ss()->sw.acquire_next_image();
-    vv::ss()->sw.queue_one_time_submit([] {
+    auto cb = vv::ss()->cb.cb();
+
+    vv::ss()->swc.acquire_next_image();
+    vv::ss()->swc.queue_one_time_submit(cb, [] {
       static sitime::stopwatch timer {};
 
       upc pc {
-        .aspect = vv::ss()->sw.aspect(),
+        .aspect = vv::ss()->swc.aspect(),
         .time = timer.secs(),
       };
 
-      auto cb = vv::ss()->sw.command_buffer();
-      auto ext = vv::ss()->sw.extent();
+      auto cb = vv::ss()->cb.cb();
+      auto ext = vv::ss()->swc.extent();
 
-      auto rp = vv::ss()->sw.cmd_render_pass({
+      voo::cmd_render_pass rp { vee::render_pass_begin {
+        .command_buffer = cb,
+        .render_pass = *vv::as()->rp,
+        .framebuffer = *vv::ss()->fbs[vv::ss()->swc.index()],
+        .extent = ext,
         .clear_colours { 
           vee::clear_colour({ 0, 0, 0, 1 }), 
           vee::clear_depth(1.0),
         },
-      });
+      }, true };
       vee::cmd_set_viewport_flipped(cb, ext);
       vee::cmd_set_scissor(cb, ext);
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->ppl);
@@ -152,6 +173,6 @@ extern "C" void casein_init() {
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 24 });
     });
-    vv::ss()->sw.queue_present();
+    vv::ss()->swc.queue_present();
   });
 }
