@@ -108,8 +108,8 @@ struct app_stuff {
 static hai::uptr<app_stuff> gas {};
 
 struct sized_stuff {
-  voo::offscreen::depth_buffer depth { gas->dq.physical_device(), gas->dq.extent_of() };
-  voo::swapchain_and_stuff sw { gas->dq, *gas->rp, depth.image_view() };
+  voo::bound_image depth = voo::bound_image::create_depth(gas->dq.extent_of(), VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+  voo::swapchain_and_stuff sw { gas->dq, *gas->rp, *depth.iv };
 };
 static hai::uptr<sized_stuff> gss {};
 
@@ -219,7 +219,7 @@ static void init() {
   
     constexpr const auto fmt = VK_FORMAT_R8G8B8A8_SRGB;
     vee::extent ext { w, h };
-    imgptr->img = vee::create_image(ext, fmt);
+    imgptr->img = vee::create_image(ext, fmt, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
     imgptr->mem = vee::create_local_image_memory(gas->dq.physical_device(), *imgptr->img);
     vee::bind_image_memory(*imgptr->img, *imgptr->mem);
     imgptr->iv = vee::create_image_view(*imgptr->img, fmt);
@@ -314,7 +314,7 @@ static void frame() {
   gss->sw.queue_present();
 }
 
-const auto i = [] {
+extern "C" void casein_init() {
   using namespace vinyl;
   on(START,  &::init);
   on(RESIZE, [] { gss.reset(nullptr); });
@@ -343,6 +343,4 @@ const auto i = [] {
   handle(KEY_UP,   K_A, [] { g_key_a = false; });
   handle(KEY_DOWN, K_D, [] { g_key_d = true;  });
   handle(KEY_UP,   K_D, [] { g_key_d = false; });
-
-  return 0;
-}();
+}
