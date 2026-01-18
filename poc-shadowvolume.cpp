@@ -53,6 +53,9 @@ struct app_stuff : vinyl::base_app_stuff {
   app_stuff() : base_app_stuff { "poc-3d" } {
     auto m = vbuf.map();
 
+    // Point at infinity, due to w=0
+    dotz::vec4 light { 1, 0, 0, 0 };
+
     // Bottom
     m += vtx { .pos { -0.9, -1.0, -0.9, 1.0 } };
     m += vtx { .pos {  0.9, -1.0, -0.9, 1.0 } };
@@ -68,6 +71,11 @@ struct app_stuff : vinyl::base_app_stuff {
     m += vtx { .pos {  0.9,  1.0,  0.9, 1.0 } };
     m += vtx { .pos {  0.9,  1.0, -0.9, 1.0 } };
     m += vtx { .pos { -0.9,  1.0,  0.9, 1.0 } };
+
+    // Top
+    m += vtx { .pos { -0.9,  1.0, -0.9, 1.0 } };
+    m += vtx { .pos = light };
+    m += vtx { .pos {  0.9,  1.0, -0.9, 1.0 } };
   }
 };
 struct ext_stuff : vinyl::base_extent_stuff {
@@ -99,6 +107,11 @@ extern "C" void casein_init() {
       pc.colour = { 0, 0, 1, 1 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_draw(cb, { .vcount = 6, .first_v = 6 });
+
+      // shadow edge
+      pc.colour = { 1, 0, 0, 1 };
+      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
+      vee::cmd_draw(cb, { .vcount = 3, .first_v = 12 });
     });
   });
 }
