@@ -90,6 +90,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .passOp = VK_STENCIL_OP_KEEP,
         .depthFailOp = VK_STENCIL_OP_INCREMENT_AND_WRAP,
         .compareOp = VK_COMPARE_OP_ALWAYS,
+        .compareMask = ~0U,
         .writeMask = ~0U,
       },
       .back = {
@@ -97,6 +98,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .passOp = VK_STENCIL_OP_KEEP,
         .depthFailOp = VK_STENCIL_OP_DECREMENT_AND_WRAP,
         .compareOp = VK_COMPARE_OP_ALWAYS,
+        .compareMask = ~0U,
         .writeMask = ~0U,
       },
     }),
@@ -125,6 +127,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .passOp = VK_STENCIL_OP_KEEP,
         .depthFailOp = VK_STENCIL_OP_KEEP,
         .compareOp = VK_COMPARE_OP_EQUAL,
+        .compareMask = ~0U,
         .writeMask = ~0U,
       },
       .back = {
@@ -132,6 +135,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .passOp = VK_STENCIL_OP_KEEP,
         .depthFailOp = VK_STENCIL_OP_KEEP,
         .compareOp = VK_COMPARE_OP_EQUAL,
+        .compareMask = ~0U,
         .writeMask = ~0U,
       },
     }),
@@ -236,7 +240,6 @@ extern "C" void casein_init() {
 
       // shadow edge
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->shd_ppl);
-      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 24 });
 
@@ -246,6 +249,8 @@ extern "C" void casein_init() {
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 12, .first_x = 0 });
+      // vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
+      // vee::cmd_draw_indexed(cb, { .xcount = 24 });
     });
     vv::ss()->swc.queue_present();
   });
