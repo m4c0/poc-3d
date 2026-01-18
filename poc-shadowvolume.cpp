@@ -82,10 +82,16 @@ struct app_stuff : vinyl::base_app_stuff {
     .depth = vee::depth::of({
       .stencilTestEnable = vk_true,
       .front = {
+        .failOp = VK_STENCIL_OP_KEEP,
+        .passOp = VK_STENCIL_OP_KEEP,
+        .depthFailOp = VK_STENCIL_OP_INCREMENT_AND_WRAP,
         .compareOp = VK_COMPARE_OP_ALWAYS,
         .writeMask = ~0U,
       },
       .back = {
+        .failOp = VK_STENCIL_OP_KEEP,
+        .passOp = VK_STENCIL_OP_KEEP,
+        .depthFailOp = VK_STENCIL_OP_DECREMENT_AND_WRAP,
         .compareOp = VK_COMPARE_OP_ALWAYS,
         .writeMask = ~0U,
       },
