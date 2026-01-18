@@ -74,6 +74,34 @@ struct app_stuff : vinyl::base_app_stuff {
     },
   });
 
+  vee::gr_pipeline shd_ppl = vee::create_graphics_pipeline({
+    .pipeline_layout = *pl,
+    .render_pass = *rp,
+    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+    .back_face_cull = false,
+    .depth = vee::depth::of({
+      .stencilTestEnable = vk_true,
+      .front = {
+        .compareOp = VK_COMPARE_OP_ALWAYS,
+        .writeMask = ~0U,
+      },
+      .back = {
+        .compareOp = VK_COMPARE_OP_ALWAYS,
+        .writeMask = ~0U,
+      },
+    }),
+    .shaders {
+      *voo::vert_shader("poc-shadowvolume.vert.spv"),
+      *voo::frag_shader("poc-shadowvolume.frag.spv"),
+    },
+    .bindings {
+      vee::vertex_input_bind(sizeof(vtx)),
+    },
+    .attributes {
+      vee::vertex_attribute_vec4(0, traits::offset_of(&vtx::pos)),
+    },
+  });
+
   app_stuff() : base_app_stuff { "poc-3d" } {
     auto m = voo::memiter<vtx> { *vbuf.memory };
 
@@ -169,6 +197,7 @@ extern "C" void casein_init() {
 
       // shadow edge
       pc.colour = { 1, 0, 0, 0.3 };
+      vee::cmd_bind_gr_pipeline(cb, *vv::as()->shd_ppl);
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 24 });
