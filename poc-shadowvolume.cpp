@@ -1,6 +1,6 @@
 #pragma leco app
-#pragma leco add_shader "poc-axis.frag"
-#pragma leco add_shader "poc-axis.vert"
+#pragma leco add_shader "poc-shadowvolume.frag"
+#pragma leco add_shader "poc-shadowvolume.vert"
 
 import clay;
 import dotz;
@@ -24,23 +24,17 @@ struct vtx {
 struct app_stuff : vinyl::base_app_stuff {
   clay::buffer<vtx> vbuf { 36 };
 
-  struct sconst {
-    float ndc_mult = 1;
-    float ndc_add  = 0;
-  };
   vee::render_pass rp = voo::single_att_depth_render_pass(dq);
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vertex_push_constant_range<upc>());
   vee::gr_pipeline ppl = vee::create_graphics_pipeline({
     .pipeline_layout = *pl,
     .render_pass = *rp,
     .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+    .back_face_cull = false,
     .depth = vee::depth::op_less(),
     .shaders {
-      clay::vert_shader("poc-axis", [] {}).pipeline_stage("main", vee::specialisation_info<sconst>({
-        vee::specialisation_map_entry(0, &sconst::ndc_mult),
-        vee::specialisation_map_entry(1, &sconst::ndc_add),
-      })),
-      *clay::frag_shader("poc-axis", [] {}),
+      *clay::vert_shader("poc-shadowvolume", [] {}),
+      *clay::frag_shader("poc-shadowvolume", [] {}),
     },
     .bindings { vbuf.vertex_input_bind() },
     .attributes {
@@ -50,22 +44,6 @@ struct app_stuff : vinyl::base_app_stuff {
 
   app_stuff() : base_app_stuff { "poc-3d" } {
     auto m = vbuf.map();
-
-    // Front
-    m += vtx { .pos { -0.9, -0.9, 1.0, 1.0 } };
-    m += vtx { .pos {  0.9, -0.9, 1.0, 1.0 } };
-    m += vtx { .pos { -0.9,  0.9, 1.0, 1.0 } };
-    m += vtx { .pos {  0.9,  0.9, 1.0, 1.0 } };
-    m += vtx { .pos { -0.9,  0.9, 1.0, 1.0 } };
-    m += vtx { .pos {  0.9, -0.9, 1.0, 1.0 } };
-
-    // Back
-    m += vtx { .pos { -0.9, -0.9, -1.0, 1.0 } };
-    m += vtx { .pos { -0.9,  0.9, -1.0, 1.0 } };
-    m += vtx { .pos {  0.9, -0.9, -1.0, 1.0 } };
-    m += vtx { .pos {  0.9,  0.9, -1.0, 1.0 } };
-    m += vtx { .pos {  0.9, -0.9, -1.0, 1.0 } };
-    m += vtx { .pos { -0.9,  0.9, -1.0, 1.0 } };
 
     // Bottom
     m += vtx { .pos { -0.9, -1.0, -0.9, 1.0 } };
@@ -82,22 +60,6 @@ struct app_stuff : vinyl::base_app_stuff {
     m += vtx { .pos {  0.9,  1.0,  0.9, 1.0 } };
     m += vtx { .pos {  0.9,  1.0, -0.9, 1.0 } };
     m += vtx { .pos { -0.9,  1.0,  0.9, 1.0 } };
- 
-    // Left
-    m += vtx { .pos { -1.0, -0.9, -0.9, 1.0 } };
-    m += vtx { .pos { -1.0, -0.9,  0.9, 1.0 } };
-    m += vtx { .pos { -1.0,  0.9, -0.9, 1.0 } };
-    m += vtx { .pos { -1.0,  0.9,  0.9, 1.0 } };
-    m += vtx { .pos { -1.0,  0.9, -0.9, 1.0 } };
-    m += vtx { .pos { -1.0, -0.9,  0.9, 1.0 } };
- 
-    // Right
-    m += vtx { .pos {  1.0, -0.9, -0.9, 1.0 } };
-    m += vtx { .pos {  1.0,  0.9, -0.9, 1.0 } };
-    m += vtx { .pos {  1.0, -0.9,  0.9, 1.0 } };
-    m += vtx { .pos {  1.0,  0.9,  0.9, 1.0 } };
-    m += vtx { .pos {  1.0, -0.9,  0.9, 1.0 } };
-    m += vtx { .pos {  1.0,  0.9, -0.9, 1.0 } };
   }
 };
 struct ext_stuff : vinyl::base_extent_stuff {
