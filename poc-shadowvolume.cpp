@@ -16,6 +16,7 @@ import vinyl;
 import voo;
 
 using namespace traits::ints;
+using namespace wagen;
 
 struct app_stuff;
 struct ext_stuff;
@@ -95,23 +96,40 @@ struct app_stuff : vinyl::base_app_stuff {
     msx += {{ 8, 6, 0 }};
   }
 };
-struct ext_stuff : vinyl::base_extent_stuff {
-  ext_stuff() : base_extent_stuff { vv::as() } {}
+struct ext_stuff {
+  vee::render_pass rp; 
+  voo::bound_image depth;
+  voo::swapchain_and_stuff sw;
+
+  ext_stuff() :
+    rp { voo::single_att_depth_render_pass(vv::as()->dq) }
+  , depth { voo::bound_image::create_depth(vv::as()->dq.extent_of(), 0) }
+  , sw { vv::as()->dq, *rp, *depth.iv }
+  {}
 };
 
 extern "C" void casein_init() {
   vv::setup([] {
-    vv::ss()->frame([] {
+    vv::ss()->sw.acquire_next_image();
+    vv::ss()->sw.queue_one_time_submit([] {
       static sitime::stopwatch timer {};
 
-      [[maybe_unused]] auto rp = vv::ss()->clear({ 0, 0, 0, 1 });
-
       upc pc {
-        .aspect = vv::ss()->aspect(),
+        .aspect = vv::ss()->sw.aspect(),
         .time = timer.secs(),
       };
 
       auto cb = vv::ss()->sw.command_buffer();
+      auto ext = vv::ss()->sw.extent();
+
+      auto rp = vv::ss()->sw.cmd_render_pass({
+        .clear_colours { 
+          vee::clear_colour({ 0, 0, 0, 1 }), 
+          vee::clear_depth(1.0),
+        },
+      });
+      vee::cmd_set_viewport_flipped(cb, ext);
+      vee::cmd_set_scissor(cb, ext);
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->ppl);
       vee::cmd_bind_vertex_buffers(cb, 0, *vv::as()->vbuf.buffer);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
@@ -126,11 +144,14 @@ extern "C" void casein_init() {
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 6 });
 
+      // TODO: stencil pipeline
+
       // shadow edge
       pc.colour = { 1, 0, 0, 0.3 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 24 });
     });
+    vv::ss()->sw.queue_present();
   });
 }
