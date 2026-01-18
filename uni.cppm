@@ -17,10 +17,10 @@ namespace uni {
     voo::bound_buffer m_buf;
    
   public:
-    t(vee::physical_device pd, unsigned n) :
+    explicit t(unsigned n) :
       m_dpool { vee::create_descriptor_pool(n, { vee::uniform_buffer(n) }) }
     , m_dsets { n }
-    , m_buf { voo::bound_buffer::create_from_host(pd, n * sizeof(gpu), vee::buffer_usage::uniform_buffer) }
+    , m_buf { voo::bound_buffer::create_from_host(n * sizeof(gpu), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) }
     {
       auto bi = vee::descriptor_buffer_info(*m_buf.buffer);
 

@@ -67,7 +67,7 @@ struct app_stuff {
     }},
   });
 
-  uni::t uni { dq.physical_device(), 1 };
+  uni::t uni { 1 };
 
   vee::sampler smp = vee::create_sampler(vee::linear_sampler);
   vee::descriptor_set_layout dsl_smp = vee::create_descriptor_set_layout({
@@ -158,13 +158,11 @@ static void init() {
   }
 
   gas->vb = voo::bound_buffer::create_from_host(
-      gas->dq.physical_device(),
       sizeof(vertex) * v_acc,
-      vee::buffer_usage::vertex_buffer);
+      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
   gas->ib = voo::bound_buffer::create_from_host(
-      gas->dq.physical_device(),
       sizeof(short) * i_acc,
-      vee::buffer_usage::index_buffer);
+      VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
   casein::cursor_visible = false;
   casein::interrupt(casein::IRQ_CURSOR);
@@ -211,7 +209,7 @@ static void init() {
     unsigned w = img.width;
     unsigned h = img.height;
     unsigned sz = w * h * 4;
-    auto host = voo::bound_buffer::create_from_host(gas->dq.physical_device(), sz);
+    auto host = voo::bound_buffer::create_from_host(sz, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     {
       voo::memiter<unsigned char> c { *host.memory };
       for (auto i = 0; i < sz; i++) c[i] = (*img.data)[i];
