@@ -39,6 +39,9 @@ struct app_stuff : vinyl::base_app_stuff {
 
   voo::bound_buffer shd_xbuf = voo::bound_buffer::create_from_host(1024 * sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
+  voo::vert_shader vshd { "poc-shadowvolume.vert.spv" };
+  voo::frag_shader fshd { "poc-shadowvolume.frag.spv" };
+
   vee::render_pass rp = vee::create_render_pass({
     .attachments {{
       vee::create_colour_attachment(dq.physical_device(), dq.surface()),
@@ -66,10 +69,7 @@ struct app_stuff : vinyl::base_app_stuff {
       .depthWriteEnable = vk_true,
       .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
     }),
-    .shaders {
-      *voo::vert_shader("poc-shadowvolume.vert.spv"),
-      *voo::frag_shader("poc-shadowvolume.frag.spv"),
-    },
+    .shaders { *vshd, *fshd },
     .bindings {
       vee::vertex_input_bind(sizeof(vtx)),
     },
@@ -101,10 +101,7 @@ struct app_stuff : vinyl::base_app_stuff {
       },
     }),
     .blends { VkPipelineColorBlendAttachmentState {} },
-    .shaders {
-      *voo::vert_shader("poc-shadowvolume.vert.spv"),
-      *voo::frag_shader("poc-shadowvolume.frag.spv"),
-    },
+    .shaders { *vshd, *fshd },
     .bindings {
       vee::vertex_input_bind(sizeof(vtx)),
     },
@@ -138,10 +135,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .writeMask = ~0U,
       },
     }),
-    .shaders {
-      *voo::vert_shader("poc-shadowvolume.vert.spv"),
-      *voo::frag_shader("poc-shadowvolume.frag.spv"),
-    },
+    .shaders { *vshd, *fshd },
     .bindings {
       vee::vertex_input_bind(sizeof(vtx)),
     },
