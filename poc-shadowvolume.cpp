@@ -15,6 +15,8 @@ import traits;
 import vinyl;
 import voo;
 
+using namespace traits::ints;
+
 struct app_stuff;
 struct ext_stuff;
 using vv = vinyl::v<app_stuff, ext_stuff>;
@@ -31,6 +33,7 @@ struct vtx {
 
 struct app_stuff : vinyl::base_app_stuff {
   voo::bound_buffer vbuf = voo::bound_buffer::create_from_host(1024 * sizeof(vtx), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+  voo::bound_buffer xbuf = voo::bound_buffer::create_from_host(1024 * sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
   vee::render_pass rp = voo::single_att_depth_render_pass(dq);
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vert_frag_push_constant_range<upc>());
@@ -81,6 +84,9 @@ struct app_stuff : vinyl::base_app_stuff {
     m += vtx { .pos { -0.9, -1.0, -0.9, 1.0 } };
     m += vtx { .pos = light };
     m += vtx { .pos {  0.9, -1.0, -0.9, 1.0 } };
+
+    auto mx = voo::memiter<uint16_t> { *xbuf.memory };
+    for (auto i = 0; i < 18; i++) mx += i;
   }
 };
 struct ext_stuff : vinyl::base_extent_stuff {
@@ -102,21 +108,22 @@ extern "C" void casein_init() {
       auto cb = vv::ss()->sw.command_buffer();
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->ppl);
       vee::cmd_bind_vertex_buffers(cb, 0, *vv::as()->vbuf.buffer);
+      vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
 
       // bottom
       pc.colour = { 0, 1, 0, 1 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
-      vee::cmd_draw(cb, { .vcount = 6, .first_v = 0 });
+      vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 0 });
 
       // top
       pc.colour = { 0, 0, 1, 1 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
-      vee::cmd_draw(cb, { .vcount = 6, .first_v = 6 });
+      vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 6 });
 
       // shadow edge
       pc.colour = { 1, 0, 0, 0.3 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
-      vee::cmd_draw(cb, { .vcount = 6, .first_v = 12 });
+      vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 12 });
     });
   });
 }
