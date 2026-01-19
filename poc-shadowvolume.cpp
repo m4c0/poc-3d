@@ -77,6 +77,7 @@ struct app_stuff : vinyl::base_app_stuff {
       },
     });
   }
+
   vee::gr_pipeline ppl = create_pipeline({
     .back_face_cull = false,
     .depth = vee::depth::of({
@@ -89,6 +90,9 @@ struct app_stuff : vinyl::base_app_stuff {
   vee::gr_pipeline shd_ppl = create_pipeline({
     .back_face_cull = false,
     .depth = vee::depth::of({
+      .depthTestEnable = vk_true,
+      .depthWriteEnable = vk_false,
+      .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
       .stencilTestEnable = vk_true,
       .front = {
         .failOp = VK_STENCIL_OP_KEEP,
@@ -107,7 +111,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .writeMask = ~0U,
       },
     }),
-    .blends { VkPipelineColorBlendAttachmentState {} },
+    //.blends { VkPipelineColorBlendAttachmentState {} },
   });
   vee::gr_pipeline light_ppl = create_pipeline({
     .back_face_cull = false,
@@ -218,23 +222,23 @@ extern "C" void casein_init() {
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
 
       // bottom
-      pc.colour = { 0, 1, 0, 1 };
+      pc.colour = { 0, 0.1, 0, 1 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 0 });
       // top
-      pc.colour = { 0, 0, 1, 1 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 6 });
 
-      pc.colour = { 1, 0, 0, 1 };
-      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
-
       // shadow edge
+      pc.colour = { 1, 0, 0, 0.3 };
+      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->shd_ppl);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 24 });
 
       // lights
+      pc.colour = { 0, 1, 0, 1 };
+      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->light_ppl);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 12, .first_x = 0 });
