@@ -59,29 +59,34 @@ struct app_stuff : vinyl::base_app_stuff {
     }},
   });
   vee::pipeline_layout pl = vee::create_pipeline_layout(vee::vert_frag_push_constant_range<upc>());
-  vee::gr_pipeline ppl = vee::create_graphics_pipeline({
-    .pipeline_layout = *pl,
-    .render_pass = *rp,
-    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+
+  inline vee::gr_pipeline create_pipeline(vee::gr_pipeline_params p) {
+    return vee::create_graphics_pipeline({
+      .pipeline_layout = *pl,
+      .render_pass = *rp,
+      .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+      .back_face_cull = p.back_face_cull,
+      .depth = p.depth,
+      .blends = p.blends,
+      .shaders { *vshd, *fshd },
+      .bindings {
+        vee::vertex_input_bind(sizeof(vtx)),
+      },
+      .attributes {
+        vee::vertex_attribute_vec4(0, traits::offset_of(&vtx::pos)),
+      },
+    });
+  }
+  vee::gr_pipeline ppl = create_pipeline({
     .back_face_cull = false,
     .depth = vee::depth::of({
       .depthTestEnable = vk_true,
       .depthWriteEnable = vk_true,
       .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
     }),
-    .shaders { *vshd, *fshd },
-    .bindings {
-      vee::vertex_input_bind(sizeof(vtx)),
-    },
-    .attributes {
-      vee::vertex_attribute_vec4(0, traits::offset_of(&vtx::pos)),
-    },
+    .blends { vee::colour_blend_classic() },
   });
-
-  vee::gr_pipeline shd_ppl = vee::create_graphics_pipeline({
-    .pipeline_layout = *pl,
-    .render_pass = *rp,
-    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+  vee::gr_pipeline shd_ppl = create_pipeline({
     .back_face_cull = false,
     .depth = vee::depth::of({
       .stencilTestEnable = vk_true,
@@ -103,19 +108,8 @@ struct app_stuff : vinyl::base_app_stuff {
       },
     }),
     .blends { VkPipelineColorBlendAttachmentState {} },
-    .shaders { *vshd, *fshd },
-    .bindings {
-      vee::vertex_input_bind(sizeof(vtx)),
-    },
-    .attributes {
-      vee::vertex_attribute_vec4(0, traits::offset_of(&vtx::pos)),
-    },
   });
-
-  vee::gr_pipeline light_ppl = vee::create_graphics_pipeline({
-    .pipeline_layout = *pl,
-    .render_pass = *rp,
-    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+  vee::gr_pipeline light_ppl = create_pipeline({
     .back_face_cull = false,
     .depth = vee::depth::of({
       .depthTestEnable = vk_true,
@@ -139,13 +133,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .writeMask = ~0U,
       },
     }),
-    .shaders { *vshd, *fshd },
-    .bindings {
-      vee::vertex_input_bind(sizeof(vtx)),
-    },
-    .attributes {
-      vee::vertex_attribute_vec4(0, traits::offset_of(&vtx::pos)),
-    },
+    .blends { vee::colour_blend_classic() },
   });
 
   app_stuff() : base_app_stuff { "poc-3d" } {
@@ -238,15 +226,16 @@ extern "C" void casein_init() {
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 6 });
 
+      pc.colour = { 1, 0, 0, 1 };
+      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
+
       // shadow edge
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->shd_ppl);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 24 });
 
       // lights
-      pc.colour = { 1, 0, 0, 1 };
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->light_ppl);
-      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 12, .first_x = 0 });
       // vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
