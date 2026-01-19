@@ -96,22 +96,22 @@ struct app_stuff : vinyl::base_app_stuff {
       .stencilTestEnable = vk_true,
       .front = {
         .failOp = VK_STENCIL_OP_KEEP,
-        .passOp = VK_STENCIL_OP_KEEP,
-        .depthFailOp = VK_STENCIL_OP_INCREMENT_AND_WRAP,
+        .passOp = VK_STENCIL_OP_INCREMENT_AND_WRAP,
+        .depthFailOp = VK_STENCIL_OP_KEEP,
         .compareOp = VK_COMPARE_OP_ALWAYS,
         .compareMask = ~0U,
         .writeMask = ~0U,
       },
       .back = {
         .failOp = VK_STENCIL_OP_KEEP,
-        .passOp = VK_STENCIL_OP_KEEP,
-        .depthFailOp = VK_STENCIL_OP_DECREMENT_AND_WRAP,
+        .passOp = VK_STENCIL_OP_DECREMENT_AND_WRAP,
+        .depthFailOp = VK_STENCIL_OP_KEEP,
         .compareOp = VK_COMPARE_OP_ALWAYS,
         .compareMask = ~0U,
         .writeMask = ~0U,
       },
     }),
-    .blends { VkPipelineColorBlendAttachmentState { .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_A_BIT } },
+    .blends { VkPipelineColorBlendAttachmentState {} },
   });
   vee::gr_pipeline light_ppl = create_pipeline({
     .back_face_cull = false,

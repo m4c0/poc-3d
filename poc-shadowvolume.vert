@@ -30,7 +30,7 @@ void main() {
   );
 
   vec4 p = pos.w == 0
-    ? vec4(0, -1, 0, 0) // Point at infinity, oriented to the light
+    ? vec4(0, -1, 1, 0) // Point at infinity, oriented to the light
     : rot * pos + vec4(0, 0, 3, 0);
   p.x *= -1; // Left-hand to right-hand
   gl_Position = mat4(
