@@ -224,10 +224,7 @@ extern "C" void casein_init() {
       // bottom
       pc.colour = { 0, 0.1, 0, 1 };
       vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
-      vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 0 });
-      // top
-      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
-      vee::cmd_draw_indexed(cb, { .xcount = 6, .first_x = 6 });
+      vee::cmd_draw_indexed(cb, { .xcount = 12, .first_x = 0 });
 
       // shadow edge
       pc.colour = { 1, 0, 0, 0.3 };
@@ -242,8 +239,6 @@ extern "C" void casein_init() {
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->light_ppl);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 12, .first_x = 0 });
-      // vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
-      // vee::cmd_draw_indexed(cb, { .xcount = 24 });
     });
     vv::ss()->swc.queue_present();
   });
