@@ -24,7 +24,7 @@ struct ext_stuff;
 using vv = vinyl::v<app_stuff, ext_stuff>;
 
 struct upc {
-  dotz::vec4 colour;
+  dotz::vec4 colour { 1, 1, 1, 0.3 };
   float aspect;
   float fov = 90;
   float time;
@@ -85,7 +85,7 @@ struct app_stuff : vinyl::base_app_stuff {
       .depthWriteEnable = vk_true,
       .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
     }),
-    .blends { vee::colour_blend_classic() },
+    .blends { VkPipelineColorBlendAttachmentState { .colorWriteMask = VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT } },
   });
   vee::gr_pipeline shd_ppl = create_pipeline({
     .back_face_cull = false,
@@ -111,7 +111,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .writeMask = ~0U,
       },
     }),
-    //.blends { VkPipelineColorBlendAttachmentState {} },
+    .blends { VkPipelineColorBlendAttachmentState { .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_A_BIT } },
   });
   vee::gr_pipeline light_ppl = create_pipeline({
     .back_face_cull = false,
@@ -137,7 +137,7 @@ struct app_stuff : vinyl::base_app_stuff {
         .writeMask = ~0U,
       },
     }),
-    .blends { vee::colour_blend_classic() },
+    .blends { VkPipelineColorBlendAttachmentState { .colorWriteMask = VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_A_BIT } },
   });
 
   app_stuff() : base_app_stuff { "poc-3d" } {
@@ -212,30 +212,25 @@ extern "C" void casein_init() {
         .extent = ext,
         .clear_colours { 
           vee::clear_colour({ 0, 0, 0, 1 }), 
-          vee::clear_depth(1.0),
+          vee::clear_depth(1.0, 0),
         },
       }, true };
       vee::cmd_set_viewport_flipped(cb, ext);
       vee::cmd_set_scissor(cb, ext);
-      vee::cmd_bind_gr_pipeline(cb, *vv::as()->ppl);
       vee::cmd_bind_vertex_buffers(cb, 0, *vv::as()->vbuf.buffer);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
+      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
 
       // bottom
-      pc.colour = { 0, 0.1, 0, 1 };
-      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
+      vee::cmd_bind_gr_pipeline(cb, *vv::as()->ppl);
       vee::cmd_draw_indexed(cb, { .xcount = 12, .first_x = 0 });
 
       // shadow edge
-      pc.colour = { 1, 0, 0, 0.3 };
-      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->shd_ppl);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 24 });
 
       // lights
-      pc.colour = { 0, 1, 0, 1 };
-      vee::cmd_push_vert_frag_constants(cb, *vv::as()->pl, &pc);
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->light_ppl);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->xbuf.buffer);
       vee::cmd_draw_indexed(cb, { .xcount = 12, .first_x = 0 });
