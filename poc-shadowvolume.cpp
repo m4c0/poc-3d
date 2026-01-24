@@ -167,11 +167,13 @@ struct app_stuff : vinyl::base_app_stuff {
     
     auto msx = voo::memiter<tri> { *shd_xbuf.memory };
     // Bottom Shadows
+    msx += {{ 2, 1, 3 }}; msx += {{ 3, 4, 2 }};
     msx += {{ 1, 2, 0 }};
     msx += {{ 4, 3, 0 }};
     msx += {{ 3, 1, 0 }};
     msx += {{ 2, 4, 0 }};
     // Top Shadows
+    msx += {{ 5, 6, 7 }}; msx += {{ 8, 7, 6 }};
     msx += {{ 6, 5, 0 }};
     msx += {{ 7, 8, 0 }};
     msx += {{ 5, 7, 0 }};
@@ -228,7 +230,7 @@ extern "C" void casein_init() {
       // shadow edge
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->shd_ppl);
       vee::cmd_bind_index_buffer_u16(cb, *vv::as()->shd_xbuf.buffer);
-      vee::cmd_draw_indexed(cb, { .xcount = 24 });
+      vee::cmd_draw_indexed(cb, { .xcount = 36 });
 
       // lights
       vee::cmd_bind_gr_pipeline(cb, *vv::as()->light_ppl);
