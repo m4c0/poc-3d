@@ -78,6 +78,17 @@ struct app_stuff : vinyl::base_app_stuff {
     });
   }
 
+  inline VkStencilOpState stencil(VkStencilOp op, VkCompareOp cmp) {
+    return {
+      .failOp = VK_STENCIL_OP_KEEP,
+      .passOp = VK_STENCIL_OP_KEEP,
+      .depthFailOp = op,
+      .compareOp = cmp,
+      .compareMask = ~0U,
+      .writeMask = ~0U,
+    };
+  }
+
   vee::gr_pipeline ppl = create_pipeline({
     .back_face_cull = false,
     .depth = vee::depth::of({
@@ -94,24 +105,10 @@ struct app_stuff : vinyl::base_app_stuff {
       .depthWriteEnable = vk_false,
       .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
       .stencilTestEnable = vk_true,
-      .front = {
-        .failOp = VK_STENCIL_OP_KEEP,
-        .passOp = VK_STENCIL_OP_INCREMENT_AND_WRAP,
-        .depthFailOp = VK_STENCIL_OP_KEEP,
-        .compareOp = VK_COMPARE_OP_ALWAYS,
-        .compareMask = ~0U,
-        .writeMask = ~0U,
-      },
-      .back = {
-        .failOp = VK_STENCIL_OP_KEEP,
-        .passOp = VK_STENCIL_OP_DECREMENT_AND_WRAP,
-        .depthFailOp = VK_STENCIL_OP_KEEP,
-        .compareOp = VK_COMPARE_OP_ALWAYS,
-        .compareMask = ~0U,
-        .writeMask = ~0U,
-      },
+      .front = stencil(VK_STENCIL_OP_INCREMENT_AND_WRAP, VK_COMPARE_OP_ALWAYS),
+      .back  = stencil(VK_STENCIL_OP_DECREMENT_AND_WRAP, VK_COMPARE_OP_ALWAYS),
     }),
-    .blends { VkPipelineColorBlendAttachmentState {} },
+    .blends { VkPipelineColorBlendAttachmentState { .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_A_BIT } },
   });
   vee::gr_pipeline light_ppl = create_pipeline({
     .back_face_cull = false,
@@ -120,22 +117,8 @@ struct app_stuff : vinyl::base_app_stuff {
       .depthWriteEnable = vk_false,
       .depthCompareOp = VK_COMPARE_OP_EQUAL,
       .stencilTestEnable = vk_true,
-      .front = {
-        .failOp = VK_STENCIL_OP_KEEP,
-        .passOp = VK_STENCIL_OP_KEEP,
-        .depthFailOp = VK_STENCIL_OP_KEEP,
-        .compareOp = VK_COMPARE_OP_EQUAL,
-        .compareMask = ~0U,
-        .writeMask = ~0U,
-      },
-      .back = {
-        .failOp = VK_STENCIL_OP_KEEP,
-        .passOp = VK_STENCIL_OP_KEEP,
-        .depthFailOp = VK_STENCIL_OP_KEEP,
-        .compareOp = VK_COMPARE_OP_EQUAL,
-        .compareMask = ~0U,
-        .writeMask = ~0U,
-      },
+      .front = stencil(VK_STENCIL_OP_KEEP, VK_COMPARE_OP_EQUAL),
+      .back  = stencil(VK_STENCIL_OP_KEEP, VK_COMPARE_OP_EQUAL),
     }),
     .blends { VkPipelineColorBlendAttachmentState { .colorWriteMask = VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_A_BIT } },
   });
